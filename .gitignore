@@ -1,0 +1,6 @@
+.*.sw?
+/.yardoc/
+/stitch-old.rb
+/doc/
+/example_site/
+/stitch-*.gem

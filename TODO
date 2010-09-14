@@ -1,0 +1,6 @@
+- When a page is requested with a path that doesn't end in a slash, redirect to
+  the same path with a slash appended. This should be done for reasons
+  mentioned in the documentation for the "DirectorySlash" Apache configuration
+  directive.
+- See about integrating the software found at http://elrte.org/ to make a sort
+  of CMS.
