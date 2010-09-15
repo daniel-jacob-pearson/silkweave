@@ -1,0 +1,5 @@
+Wed 15 Sep 2010
+  - Started a changelog.
+  - When a page is requested with a path that doesn't end in a slash, redirect
+    to the same path with a slash appended. This allows relative URL
+    references within the HTML code of pages to work correctly.
