@@ -7,6 +7,7 @@ module Stitch
   # library (which is a part of Ruby on Rails). 
   class Needle < ActionController::Metal
     include AbstractController::Layouts
+    include ActionController::UrlFor # required for "render :location => foo"
     include ActionController::Helpers
     include ActionController::Rendering
     include ActionController::RackDelegation
@@ -53,18 +54,34 @@ module Stitch
     # object is passed to the template in the form of a variable named +@page+.
     def sew
       append_view_path(site_root + ':templates')
-      @page = page_for(Rack::Utils.unescape(request.path_info))
+      request_path = Rack::Utils.unescape(request.path_info)
+      # This allows relative URL references within the HTML code of pages to
+      # work correctly.
+      unless request_path[-1..-1] == '/'
+        render :status => :moved_permanently,
+               :location => request_path + '/',
+               :inline => "<a href='#{request_path}/'>#{request_path}/</a>"
+        return
+      end
+      @page = page_for(request_path)
       content_type = @page.content_type
       template = template_for(@page)
       layout = template_for(@page, 'layouts/')
       if template
         render :template => template, :layout => layout
       else
-        raise InternalServerError, <<-MSG
-          This site's author did not provide a template for
-          <code>#{@page.class}</code> nor is there a default template.
-        MSG
+        raise InternalServerError, 
+          "This site's author did not provide a template for " \
+          "<code>#{@page.class}</code> nor is there a default template."
       end
+    rescue HTTPError
+      raise
+    rescue ActionView::Template::Error => e
+      raise InternalServerError,
+        "In <code>#{fspath_to_urlpath e.file_name}</code>, line " \
+        "#{e.line_number}: #{e.message}"
+    rescue StandardError => error
+      raise InternalServerError, error.message
     end
 
     # Whenever an +HTTPError+ is raised while generating a page with Stitch,
@@ -84,8 +101,10 @@ module Stitch
         render :status => type,
                :template => type.inspect
       else
-        render :status => type,
-               :inline => "<h1>#{type.to_s.titleize}</h1> #{@error.message}"
+        render :status => type, :inline => "<!DOCTYPE html>" \
+          "<html><head><meta charset='utf-8' />" \
+          "<title>#{type.to_s.titleize}</title></head>" \
+          "<body><h1>#{type.to_s.titleize}</h1>#{@error.message}</body></html>"
       end
     end
     rescue_from HTTPError, :with => :http_error_handler
@@ -127,5 +146,11 @@ module Stitch
       template
     end
     helper_method :template_for
+
+    # :nodoc:
+    # Required for including ActionController::UrlFor.
+    def self._routes
+      ActionDispatch::Routing::RouteSet.new
+    end
   end
 end

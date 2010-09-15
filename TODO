@@ -1,6 +1,9 @@
-- When a page is requested with a path that doesn't end in a slash, redirect to
-  the same path with a slash appended. This should be done for reasons
-  mentioned in the documentation for the "DirectorySlash" Apache configuration
-  directive.
+- Add Blog page types.
+  * Blog::Index (/diary/)
+  * Blog::Archive (/diary/2010/, /diary/2010/09/, /diary/2010/09/15/)
+  * Blog::Entry (/diary/2010/09/15/picnic-in-the-woods/)
+  * Blog::RSSIndex
+  * Blog::AtomIndex
+- Support updating page attributes via POST request.
 - See about integrating the software found at http://elrte.org/ to make a sort
   of CMS.
