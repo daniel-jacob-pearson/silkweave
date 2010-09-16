@@ -57,10 +57,11 @@ module Stitch
 
     # Returns an object to model a Web page. The class of this object (also
     # known as the page type) is determined by reading a file named
-    # ":page-type" found in the directory associated with the requested path.
-    # If no such file can be read, the parent directories are searched for a
-    # file of that name until the parent of +site_root+ is reached, at which
-    # point +Stitch::PageTypes::PlainPage+ is used as the default page type.
+    # "=page-type" found in the directory associated with the requested path.
+    # If no such file can be read, the path and its ancestors are searched for
+    # a file named ":page-type" until the parent of +site_root+ is reached, at
+    # which point +Stitch::PageTypes::PlainPage+ is used as the default page
+    # type.
     #
     # @param [Pathname, #to_str, #to_path] path A path in URL space.
     #
@@ -68,12 +69,17 @@ module Stitch
     #   +Stitch::PageTypes+ module, initialized with the given +path+.
     #
     # @raise [InternalServerError] if the page type specified in the
-    #   ":page-type" file is not the name of a class in +Stitch::PageTypes+.
+    #   "=page-type" or ":page-type" file is not the name of a class in
+    #   +Stitch::PageTypes+.
     def page_for path
       path = Pathname.new path unless path.is_a? Pathname
-      type_file = find_upward(path, ':page-type', StringIO.new('PlainPage'))
+      private_type_file = urlpath_to_fspath(path + '=page-type')
+      type_file = if private_type_file.readable?
+        private_type_file 
+      else
+        find_upward(path, ':page-type', StringIO.new('PlainPage'))
+      end
       begin
-        #PageTypes.const_get(type_file.read.strip).new(path, site_root)
         "Stitch::PageTypes::#{type_file.read.strip}".constantize.new(path, site_root)
       rescue NameError, NoMethodError, ArgumentError => error
         type = type_file.read.strip.inspect
@@ -119,14 +125,10 @@ module Stitch
       looked = []
       root = Pathname.new '/'
       path.ascend do |p|
-        begin
-          fspath = urlpath_to_fspath(p + target)
-          fspath.read 1
-          return fspath
-        rescue SystemCallError
-          looked << p
-          break if p == root
-        end
+        fspath = urlpath_to_fspath(p + target)
+        return fspath if fspath.readable?
+        looked << p
+        break if p == root
       end
       return default
     end

@@ -1,3 +1,5 @@
+- Designate and support a location for files containing user-defined page
+  types.
 - Add Blog page types.
   * Blog::Index (/diary/)
   * Blog::Archive (/diary/2010/, /diary/2010/09/, /diary/2010/09/15/)
@@ -7,3 +9,4 @@
 - Support updating page attributes via POST request.
 - See about integrating the software found at http://elrte.org/ to make a sort
   of CMS.
+- Implement some sort of page caching.

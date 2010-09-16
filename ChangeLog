@@ -4,3 +4,8 @@ Wed 15 Sep 2010
     to the same path with a slash appended. This allows relative URL
     references within the HTML code of pages to work correctly.
   - Template rendering exceptions are handled, as are most other exceptions.
+
+Thu 16 Sep 2010
+  - Simplified Stitch::Utils#find_upward by a few lines.
+  - Allow page type to be set on a page without bequeathing that type to the
+    page's descendents by using "=page-type" instead of ":page-type".
