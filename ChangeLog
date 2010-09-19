@@ -9,3 +9,8 @@ Thu 16 Sep 2010
   - Simplified Stitch::Utils#find_upward by a few lines.
   - Allow page type to be set on a page without bequeathing that type to the
     page's descendents by using "=page-type" instead of ":page-type".
+
+Fri 17 Sep 2010
+  - The pages returned by Stitch::PageTypes::Base#children now have paths that
+    end with "/" to avoid unnecessary 301 responses when those paths are used
+    to construct URLs in HTML output.

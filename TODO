@@ -1,3 +1,7 @@
+- Separate Stitch::Darning into two separate middlewares, one for measuring
+  length, and another for eliding the body from responses to HEAD requests.
+- Take the code that redirects requests for directories so that their path ends
+  with "/" and move it from Stitch::Needle#sew to a middleware.
 - Designate and support a location for files containing user-defined page
   types.
 - Add Blog page types.
