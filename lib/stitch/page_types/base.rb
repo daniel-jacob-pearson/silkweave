@@ -98,8 +98,8 @@ module Stitch
       # @return [Array<AbstractPage>]
       def children
         urlpath_to_fspath(path).children.
-          select { |i| i.directory? and not i.basename.to_s =~ /\A:/ }.
-          map { |j| page_for(fspath_to_urlpath j) }
+          select { |i| i.directory? and not i.basename.to_s =~ /\A[:_]/ }.
+          map { |j| page_for("#{fspath_to_urlpath j}/") }
       end
 
       # Returns the page object for this page's parent.
