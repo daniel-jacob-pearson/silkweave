@@ -1,16 +1,21 @@
-Wed 15 Sep 2010
-  - Started a changelog.
-  - When a page is requested with a path that doesn't end in a slash, redirect
-    to the same path with a slash appended. This allows relative URL
-    references within the HTML code of pages to work correctly.
-  - Template rendering exceptions are handled, as are most other exceptions.
+Mon 04 Oct 2010
+  - Stitch::Darning was separated into two separate middlewares, one for
+    measuring length, and another for eliding the body from responses to HEAD
+    requests.
+
+Fri 17 Sep 2010
+  - The pages returned by Stitch::PageTypes::Base#children now have paths that
+    end with "/" to avoid unnecessary 301 responses when those paths are used
+    to construct URLs in HTML output.
 
 Thu 16 Sep 2010
   - Simplified Stitch::Utils#find_upward by a few lines.
   - Allow page type to be set on a page without bequeathing that type to the
     page's descendents by using "=page-type" instead of ":page-type".
 
-Fri 17 Sep 2010
-  - The pages returned by Stitch::PageTypes::Base#children now have paths that
-    end with "/" to avoid unnecessary 301 responses when those paths are used
-    to construct URLs in HTML output.
+Wed 15 Sep 2010
+  - Started a changelog.
+  - When a page is requested with a path that doesn't end in a slash, redirect
+    to the same path with a slash appended. This allows relative URL
+    references within the HTML code of pages to work correctly.
+  - Template rendering exceptions are handled, as are most other exceptions.

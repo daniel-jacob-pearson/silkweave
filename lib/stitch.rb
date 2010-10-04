@@ -42,9 +42,9 @@ module Stitch
 
   autoload :Utils
   autoload :Needle
-  autoload :Darning
   autoload :AbstractPage
   autoload :PageTypes
+  autoload :Middleware
 
   # Returns a Rack (end-point) app for starting up Stitch. Use it as the
   # argument to +run+ in a rackup configuration file (+config.ru+), or
@@ -68,7 +68,8 @@ module Stitch
   def self.app(root)
     Needle.site_root = root
     Needle.middleware.clear
-    Needle.use Darning
+    Needle.use Middleware::Head
+    Needle.use Middleware::Length
     Needle.use ActionDispatch::Static, root
     Needle.action :sew
   end

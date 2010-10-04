@@ -1,15 +1,19 @@
-- Separate Stitch::Darning into two separate middlewares, one for measuring
-  length, and another for eliding the body from responses to HEAD requests.
 - Take the code that redirects requests for directories so that their path ends
   with "/" and move it from Stitch::Needle#sew to a middleware.
 - Designate and support a location for files containing user-defined page
   types.
 - Add Blog page types.
   * Blog::Index (/diary/)
+    .posts
   * Blog::Archive (/diary/2010/, /diary/2010/09/, /diary/2010/09/15/)
-  * Blog::Entry (/diary/2010/09/15/picnic-in-the-woods/)
-  * Blog::RSSIndex
-  * Blog::AtomIndex
+  * Blog::Post (/diary/2010/09/15/picnic-in-the-woods/)
+    .date
+    @title
+    @summary
+    @content
+  * Blog::Comment (/diary/2010/09/15/picnic-in-the-woods/comment-1)
+  * Blog::RSSIndex (/diary/rss-feed/)
+  * Blog::AtomIndex (/diary/atom-feed/)
 - Support updating page attributes via POST request.
 - See about integrating the software found at http://elrte.org/ to make a sort
   of CMS.
