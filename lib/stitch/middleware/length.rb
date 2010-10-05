@@ -1,7 +1,5 @@
 module Stitch
   module Middleware
-    # @private
-    #
     # This Rack middleware is used instead of +Rack::ContentLength+ because it
     # ignores response bodies that are instances of +Rack::Response+ (as is
     # true for responses produced by +ActionController+).  Beware that this

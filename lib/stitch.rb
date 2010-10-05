@@ -69,6 +69,7 @@ module Stitch
     Needle.site_root = root
     Needle.middleware.clear
     Needle.use Middleware::Head
+    Needle.use Middleware::AddSlash, root
     Needle.use Middleware::Length
     Needle.use ActionDispatch::Static, root
     Needle.action :sew

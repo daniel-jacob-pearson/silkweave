@@ -4,6 +4,7 @@ module Stitch
   module Middleware
     extend ActiveSupport::Autoload
 
+    autoload :AddSlash
     autoload :Head
     autoload :Length
   end

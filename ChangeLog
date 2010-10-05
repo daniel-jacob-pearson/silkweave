@@ -1,3 +1,8 @@
+Tue 05 Oct 2010
+  - The code that redirects requests for directories so that their path ends
+    with "/" and was moved from Stitch::Needle#sew to a new middleware called
+    AddSlash.
+
 Mon 04 Oct 2010
   - Stitch::Darning was separated into two separate middlewares, one for
     measuring length, and another for eliding the body from responses to HEAD

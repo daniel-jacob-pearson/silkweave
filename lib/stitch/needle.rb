@@ -55,14 +55,6 @@ module Stitch
     def sew
       append_view_path(site_root + ':templates')
       request_path = Rack::Utils.unescape(request.path_info)
-      # This allows relative URL references within the HTML code of pages to
-      # work correctly.
-      unless request_path[-1..-1] == '/'
-        render :status => :moved_permanently,
-               :location => request_path + '/',
-               :inline => "<a href='#{request_path}/'>#{request_path}/</a>"
-        return
-      end
       @page = page_for(request_path)
       content_type = @page.content_type
       template = template_for(@page)

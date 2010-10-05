@@ -1,7 +1,5 @@
 module Stitch
   module Middleware
-    # @private
-    #
     # This Rack middleware is used instead of +ActionDispatch::Head+ because it
     # has the annoying habit of destructively changing +env["REQUEST_METHOD"]+
     # from "HEAD" to "GET", making HEAD requests undetectable in the logs.
