@@ -54,11 +54,11 @@ module Stitch
     # object is passed to the template in the form of a variable named +@page+.
     def sew
       append_view_path(site_root + ':templates')
-      request_path = Rack::Utils.unescape(request.path_info)
-      @page = page_for(request_path)
+      request_path = Rack::Utils.unescape request.path_info
+      @page = page_for request_path
       content_type = @page.content_type
-      template = template_for(@page)
-      layout = template_for(@page, 'layouts/')
+      template = template_for @page
+      layout = template_for @page, 'layouts/'
       if template
         render :template => template, :layout => layout
       else
