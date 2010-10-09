@@ -2,7 +2,7 @@ module Stitch
   # @private
   #
   # This class contains only internal implementation for Stitch and is not part
-  # of its public interface. It handles most of the heavy lifting of for HTTP
+  # of its public interface. It handles most of the heavy lifting of HTTP
   # request handling and template rendering by delegating to the ActionPack
   # library (which is a part of Ruby on Rails). 
   class Needle < ActionController::Metal
