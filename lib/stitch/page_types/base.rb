@@ -1,14 +1,18 @@
 module Stitch
   module PageTypes
-    # +Stitch::PageTypes::Base+ has all the basic machinery for defining page
-    # types that represent Web pages whose data are stored in the filesystem.
-    # All but the most unusual classes that implement page types for Stitch
-    # should derive from this class.
+    # +Stitch::PageTypes::Base+ is meant to serve as a base class for deriving
+    # new page types. It's not so useful when used as a page type directly. It
+    # provides all the basic machinery needed for defining page types that
+    # represent Web pages whose data are stored in the filesystem. Any page
+    # type for Stitch should probably inherit from this class as long as it
+    # follows the Stitch conventions regarding storing page data in the
+    # filesystem.
     class Base < ::Stitch::AbstractPage
       include ::Stitch::Utils
       include ::Comparable
 
-      # The +path+ of a page corresponds to an existing directory in the
+      # The +path+ of a page is the path component of the URL that was used to
+      # access the page. This path corresponds to an existing directory in the
       # filesystem from which files can be read to determine the attributes of
       # the page.
       #
@@ -99,7 +103,8 @@ module Stitch
       def children
         urlpath_to_fspath(path).children.
           select { |i| i.directory? and not i.basename.to_s =~ /\A[:_]/ }.
-          map { |j| page_for("#{fspath_to_urlpath j}/") }
+          map { |j| page_for "#{fspath_to_urlpath j}/" }.
+          reject { |k| k.is_a? ::Stitch::PageTypes::Ignore }
       end
 
       # Returns the page object for this page's parent.
