@@ -29,7 +29,12 @@ module Stitch
 
     # Accessor for the +path+ attribute.
     #
-    # @return [Pathname] 
+    # The +path+ of a page is the path component of the URL that was used to
+    # access the page. This path corresponds to an existing directory in the
+    # filesystem from which files can be read to determine the attributes of
+    # the page.
+    #
+    # @return [Pathname] The URL path that identifies this page.
     def path
       raise NotImplementedError
     end
