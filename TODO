@@ -1,3 +1,4 @@
+- Only use Pathname when really necessary.
 - Designate and support a location for files containing user-defined page
   types.
 - Add Blog page types.
