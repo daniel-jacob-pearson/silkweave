@@ -98,7 +98,7 @@ module Stitch
         else
           reason = "it just ain't"
         end
-        raise InternalServerError, <<-MSG
+        raise InternalServerError, <<-MSG.split.join(' ')
           This site's author specified <code>#{type}</code> as the page type
           for <code>#{path}</code>, but that is not a valid page type because
           #{reason}. This page type was specified in <code>#{type_file}</code>.
