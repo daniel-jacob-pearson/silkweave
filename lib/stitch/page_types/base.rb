@@ -103,7 +103,8 @@ module Stitch
       def children
         urlpath_to_fspath(path).children.
           select { |i| i.directory? and not i.basename.to_s =~ /\A[:_]/ }.
-          map { |j| page_for "#{fspath_to_urlpath j}/" }.
+          map { |j| page_for "#{fspath_to_urlpath j}/" rescue nil }.
+          compact.
           reject { |k| k.is_a? ::Stitch::PageTypes::Ignore }
       end
 
