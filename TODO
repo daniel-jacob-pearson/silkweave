@@ -1,6 +1,6 @@
 - Only use Pathname when really necessary.
-- Designate and support a location for files containing user-defined page
-  types.
+- Designate and support a location for files containing user-defined page types.
+- Move the template directory out of the site root.
 - Add Blog page types.
   * Blog::Index (/diary/)
     .posts
@@ -13,7 +13,7 @@
   * Blog::Comment (/diary/2010/09/15/picnic-in-the-woods/comment-1)
   * Blog::RSSIndex (/diary/rss-feed/)
   * Blog::AtomIndex (/diary/atom-feed/)
-- Support updating page attributes via POST request.
-- See about integrating the software found at http://elrte.org/ to make a sort
-  of CMS.
+  * figure out how to store category information (/diary/categories/cheese/, /diary/categories/pasta/, /diary/categories/fruit/)
+- (Maybe) Support updating page attributes via POST request.
 - Implement some sort of page caching.
+- (Maybe) Integrate a Web-based file manager and editor (such as http://elrte.org/) to make a sort of CMS.
