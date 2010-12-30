@@ -86,8 +86,11 @@ class Pathname
   alias_method :to_path, :to_s
   old_init = self.instance_method :initialize
   define_method :initialize do |path|
-    path = path.__send__(:to_str) if path.respond_to? :to_str
-    path = path.__send__(:to_path) if path.respond_to? :to_path
+    if path.respond_to? :to_str
+      path = path.__send__ :to_str
+    elsif path.respond_to? :to_path
+      path = path.__send__ :to_path
+    end
     old_init.bind(self).call(path)
   end
 end
