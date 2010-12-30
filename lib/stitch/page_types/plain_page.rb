@@ -10,8 +10,11 @@ module Stitch
     #
     # This is a practical example of how simple it can be to create a new page
     # type by subclassing +Stitch::PageTypes::Base+.
+    #
+    # +PlainPage+ is also the default page type for any page in a Stitch site
+    # that doesn't inherit or explicitly set a page type.
     class PlainPage < Base
-      page_attributes :title, :content
+      file_attributes :title, :content
     end
   end
 end

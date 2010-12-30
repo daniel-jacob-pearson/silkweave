@@ -58,19 +58,19 @@ module Stitch
       # @example
       #   module Stitch::PageTypes
       #     class Example < Base
-      #       page_attribute :favorite_drink, "A favorite drink was not chosen."
+      #       file_attribute :favorite_drink, "A favorite drink was not chosen."
       #     end
       #   end
-      def self.page_attribute name, default=nil
+      def self.file_attribute name, default=nil
         define_method name do ||
           (fspath + "@#{name}").read.chomp.html_safe rescue default
         end
         return # We don't want to return the method we just defined.
       end
 
-      # Like the +page_attribute+ method, this lets you declare page attributes
+      # Like the +file_attribute+ method, this lets you declare page attributes
       # that are stored in the filesystem path associated with this page.
-      # However, +page_attributes+ lets you declare multiple attributes at once
+      # However, +file_attributes+ lets you declare multiple attributes at once
       # and doesn't let you specify a default value. The default value of each
       # attribute declared with this will be +nil+.
       #
@@ -79,11 +79,11 @@ module Stitch
       # @example 
       #   module Stitch::PageTypes
       #     class PlainPage < Base
-      #       page_attributes :title, :content
+      #       file_attributes :title, :content
       #     end
       #   end
-      def self.page_attributes *names
-        names.each { |name| page_attribute name }
+      def self.file_attributes *names
+        names.each { |name| file_attribute name }
         return
       end
 
