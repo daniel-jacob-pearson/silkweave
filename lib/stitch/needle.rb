@@ -12,49 +12,27 @@ module Stitch
     include ActionController::Rendering
     include ActionController::RackDelegation
     include ActionController::Rescue
-    include Stitch::Utils
-    helper Stitch::Utils
 
-    # Returns the directory on the filesystem that represents the root of the
-    # Web site. All paths requested from the Web site will be resolved into
-    # paths within this directory.
-    #
-    # @return [Pathname] The filesystem path to the Web site's root.
-    attr_reader :site_root
-    helper_method :site_root
+    # @return [Stitch::Site] The Web site being served.
+    attr_reader :site
 
-    # The class method accessors for +site_root+ exist merely to assign a value
-    # to the similarly named instance attribute upon instance construction.
-    # This roundabout technique is used instead of simply passing a parameter
-    # to the constructor so we can use +ActionController::Metal.action+, which
-    # invokes the constructor without arguments.
-    def initialize(*)
-      @site_root = self.class.site_root
-      super
-    end
-
-    # @return [Pathname] The filesystem path to the Web site's root.
-    def self.site_root
-      @root ||= Pathname.new(Dir.pwd)
-    end
-
-    # @param [Pathname, #to_str, #to_path] path The filesystem path to the Web
-    #   site's root.
-    def self.site_root= path
-      path = Pathname.new(path) unless path.is_a?(Pathname)
-      path = Pathname.new('/') + path if path.relative?
-      @root = path
+    # Since this constructor requires an argument, the inherited +action+
+    # method, which calls the constructor without arguments, cannot be used
+    # with this class.
+    def initialize(site)
+      @site = site
+      super()
     end
 
     # The main entry-point for handling an HTTP request with Stitch. It
     # constructs a page object from the path component of the requested URL
-    # (using +Stitch::Utils.page_for+), then finds the template and layout
+    # (using +Stitch::Site#page_for+), then finds the template and layout
     # associated with the page's type (using +Stitch::Needle#template_for+),
     # and renders the template (within the associated layout, if any). The page
     # object is passed to the template in the form of a variable named +@page+.
     def sew
-      append_view_path site_root + ':templates'
-      @page = page_for(Rack::Utils.unescape(request.path_info))
+      append_view_path site.root + ':templates'
+      @page = site.page_for(Rack::Utils.unescape(request.path_info))
       content_type = @page.content_type
       if template = template_for(@page)
         render :template => template, :layout => template_for(@page, 'layouts/')
@@ -100,7 +78,7 @@ module Stitch
 
     # Finds and returns the template associated with the given class or the
     # given object's class. It looks for templates in the ":templates"
-    # directory within +site_root+. It first looks for a template named after
+    # directory within +site.root+. It first looks for a template named after
     # the class name with "Stitch::PageTypes::" stripped from the start and
     # inflected with +ActiveSupport::Inflector#underscore+. If there is no
     # template with that name, then it climbs up the superclass chain until it

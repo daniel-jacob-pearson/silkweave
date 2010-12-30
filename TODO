@@ -1,6 +1,7 @@
 - Only use Pathname when really necessary.
-- Designate and support a location for files containing user-defined page types.
 - Move the template directory out of the site root.
+- Designate and support a location for files containing user-defined page types.
+- Improve the code for loading page type class files.
 - Add Blog page types.
   * Blog::Index (/diary/)
     .posts

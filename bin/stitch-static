@@ -5,15 +5,9 @@ require 'stitch'
 require 'optparse'
 
 module Stitch::StaticGenerator
-  extend Stitch::Utils
-
   class << self
-    attr_accessor :output_filename, :overwrite, :skip_existing
-    attr_accessor :server_name, :server_port, :url_scheme
-    attr_reader :site_root
-    def site_root= path
-      @site_root = Pathname.new(path)
-    end
+    attr_accessor :site_root, :output_filename, :overwrite, :skip_existing,
+      :server_name, :server_port, :url_scheme
   end
 
   # Defaults for options
@@ -72,14 +66,14 @@ module Stitch::StaticGenerator
       'rack.multiprocess' => true,
       'rack.run_once' => false
     }
-    site = Stitch.app site_root
+    site = Stitch::Site.new site_root
     paths = ['/']
     until paths.empty?
       env['PATH_INFO'] = paths.shift.to_s
-      (paths.concat page_for(env['PATH_INFO']).children.map &:path) rescue nil
+      (paths.concat site.page_for(env['PATH_INFO']).children.map &:path) rescue nil
       status, headers, body = site.call env.dup
       #p [status, headers, body.map.join]; print 'enter to continue'; gets # DEBUG
-      output_path = site_root + env['PATH_INFO'].sub(/^\//,'') + output_filename
+      output_path = site.root + env['PATH_INFO'].sub(/^\//,'') + output_filename
       if output_path.exist?
         if skip_existing
           puts "\"#{output_path}\" already exists, so it is being skipped."

@@ -1,20 +1,67 @@
 module Stitch
-  # The methods defined in this module are made available in page templates.
-  # You can also mix them into a page type class for use in its implementation.
-  # If your page type class inherits from +Stitch::PageTypes::Base+, then this
-  # module is already included. These methods require their receiver to have a
-  # +site_root+ method that can be called with no arguments and returns a
-  # +Pathname+ instance.
-  module Utils
-    # Converts a filesystem path into a URL path by stripping +site_root+ from
-    # beginning of the path. The input need not refer (nor is the output
+  # The representation of a Web site served by Stitch.
+  class Site
+    # Returns an object that represents a Stitch-based Web site. Since every
+    # +Site+ instance is a Rack (end-point) application, you can use such an
+    # instance as the argument to +run+ in a rackup configuration file
+    # (+config.ru+), or otherwise integrate it into a Rack-capable Web server.
+    #
+    # If you use +Needle+ directly (and you probably shouldn't), note that
+    # creating a +Site+ instance has the side effect of clearing the
+    # +middleware+ attribute of the +Needle+ class.
+    #
+    # @example In a config.ru file:
+    #   run Stitch::Site.new('/var/www')
+    #
+    # @example Running as a CGI script:
+    #   Rack::Handler::CGI.run Stitch::Site.new('/home/nancy/public_html')
+    #
+    # @param [#to_str, #to_path] root The directory to use as the site's root.
+    #
+    #   This must be an absolute pathname. If you pass in a relative pathname,
+    #   then it will be coerced into an absolute pathname by prefixing "/",
+    #   which may not produce the result you desire, so you're better off only
+    #   using pathnames that are already absolute.
+    def initialize(root)
+      root = Pathname.new(root) unless root.is_a?(Pathname)
+      root = Pathname.new('/') + root if root.relative?
+      @root = root
+      Needle.middleware.clear
+      Needle.use Middleware::Head
+      Needle.use Middleware::AddSlash, @root.to_s
+      Needle.use Middleware::Length
+      Needle.use ActionDispatch::Static, @root.to_s
+      @action = Needle.middleware.build('sew') do |env|
+        Needle.new(self).dispatch(:sew, ActionDispatch::Request.new(env))
+      end
+      Needle.middleware.clear
+    end
+
+    # @return [Pathname] The directory that serves as the Web site's root.
+    #
+    #   All paths requested from the Web site will be resolved into paths within
+    #   this directory.
+    attr_reader :root
+
+    # The #call method required by the Rack specification for Rack
+    # applications.
+    #
+    # @param [Hash] env An environment as defined by the Rack spec.
+    #
+    # @return [(#to_i, {String => String}, #each)] A Rack-conformant response.
+    def call(env)
+      @action.call(env)
+    end
+
+    # Converts a filesystem path into a URL path by stripping +self.root+ from
+    # the beginning of the path. The input need not refer (nor is the output
     # guaranteed to refer) to a file or directory that actually exists or is
     # accessible.
     #
-    # @example Assuming +site_root+ is +'/var/www'+,
+    # @example Assuming +self.root+ is +'/var/www'+,
     #   fspath_to_urlpath '/var/www/foo/bar.jpg' #=> #<Pathname:/foo/bar.jpg>
     #
-    # @example A file not in +site_root+ will remain unchanged.
+    # @example A file not in +self.root+ will remain unchanged.
     #   fspath_to_urlpath '/dev/null' #=> #<Pathname:/dev/null>
     #
     # @param [Pathname, #to_str, #to_path] fspath
@@ -23,14 +70,14 @@ module Stitch
     # @return [Pathname] A path appropriate for requests to the Web server.
     def fspath_to_urlpath fspath
       fspath = Pathname.new fspath unless fspath.is_a? Pathname
-      Pathname.new('/') + fspath.relative_path_from(site_root)
+      Pathname.new('/') + fspath.relative_path_from(self.root)
     end
 
-    # Converts a URL path into a filesystem path by prepending +site_root+.
+    # Converts a URL path into a filesystem path by prepending +self.root+.
     # The input need not refer (nor is the output guaranteed to refer) to a
     # file or directory that actually exists or is accessible.
     #
-    # @example Assuming +site_root+ is +'/var/www'+,
+    # @example Assuming +self.root+ is +'/var/www'+,
     #   urlpath_to_fspath '/foo/bar.jpg' #=> #<Pathname:/var/www/foo/bar.jpg>
     #
     # @example Relative paths are resolved with respect to the root path.
@@ -39,7 +86,7 @@ module Stitch
     # @example References to a parent or current directory will resolve.
     #   urlpath_to_fspath '/./foo/../bar.jpg' #=> #<Pathname:/var/www/bar.jpg>
     #
-    # @example But attempts to break out of +site_root+ will fail.
+    # @example But attempts to break out of +self.root+ will fail.
     #   urlpath_to_fspath '../../etc/passwd' #=> #<Pathname:/var/www/etc/passwd>
     #
     # @param [Pathname, #to_str, #to_path] urlpath
@@ -48,18 +95,18 @@ module Stitch
     # @return [Pathname] A path to something on the Web server's filesystem.
     def urlpath_to_fspath urlpath
       urlpath = Pathname.new urlpath unless urlpath.is_a? Pathname
-      root = Pathname.new '/'
-      urlpath = urlpath.relative? ? root+urlpath : urlpath
+      fsroot = Pathname.new '/'
+      urlpath = urlpath.relative? ? fsroot+urlpath : urlpath
       urlpath = urlpath.cleanpath # Clears out naughty leading ".." components.
-      urlpath = urlpath.relative_path_from root
-      site_root + urlpath
+      urlpath = urlpath.relative_path_from fsroot
+      self.root + urlpath
     end
 
     # Returns an object to model a Web page. The class of this object (also
     # known as the page type) is determined by reading a file named
     # "=page-type" found in the directory associated with the requested path.
     # If no such file can be read, the path and its ancestors are searched for
-    # a file named ":page-type" until the parent of +site_root+ is reached, at
+    # a file named ":page-type" until the parent of +self.root+ is reached, at
     # which point +Stitch::PageTypes::PlainPage+ is used as the default page
     # type.
     #
@@ -80,7 +127,7 @@ module Stitch
         find_upward(path, ':page-type', StringIO.new('PlainPage'))
       end
       begin
-        "Stitch::PageTypes::#{type_file.read.strip}".constantize.new(path, site_root)
+        "Stitch::PageTypes::#{type_file.read.strip}".constantize.new(path, self)
       rescue NameError, NoMethodError, ArgumentError => error
         type = type_file.read.strip.inspect
         if type_file.is_a? Pathname
@@ -108,7 +155,7 @@ module Stitch
 
     # Checks the given directory for a readable file with the given name. If
     # such a file isn't found, the directory's ancestors (up to and including
-    # +site_root+) are checked, starting from the parent and proceeding upward.
+    # +self.root+) are checked, starting from the parent and proceeding upward.
     # If none of the ancestors have such a file, a default value is returned.
     #
     # @param path [Pathname] The URL path of the directory from which to start
@@ -123,12 +170,12 @@ module Stitch
     #   if it was found, or +default+, if it was not found.
     def find_upward(path, target, default = nil)
       looked = []
-      root = Pathname.new '/'
+      slash = Pathname.new '/'
       path.ascend do |p|
         fspath = urlpath_to_fspath(p + target)
         return fspath if fspath.readable?
         looked << p
-        break if p == root
+        break if p == slash
       end
       return default
     end
