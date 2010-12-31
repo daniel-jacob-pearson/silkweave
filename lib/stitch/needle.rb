@@ -31,7 +31,7 @@ module Stitch
     # and renders the template (within the associated layout, if any). The page
     # object is passed to the template in the form of a variable named +@page+.
     def sew
-      append_view_path site.root + ':templates'
+      append_view_path site.template_path
       @page = site.page_for(Rack::Utils.unescape(request.path_info))
       content_type = @page.content_type
       if template = template_for(@page)

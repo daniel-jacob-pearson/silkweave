@@ -100,13 +100,15 @@ module Stitch
 
       # Returns a list of the pages that are found below this page.
       #
+      # Pages of the +Ignore+ type are, predictably, ignored and thus excluded
+      # from this list.
+      #
       # @return [Array<AbstractPage>]
       def children
         fspath.children.
-          select { |i| i.directory? and not i.basename.to_s =~ /\A[:_]/ }.
+          select { |i| i.directory? }.
           map { |j| site.page_for "#{site.fspath_to_urlpath j}/" rescue nil }.
-          compact.
-          reject { |k| k.is_a? ::Stitch::PageTypes::Ignore }
+          reject { |k| k.nil? or k.is_a? ::Stitch::PageTypes::Ignore }
       end
 
       # Returns the page object for this page's parent.
