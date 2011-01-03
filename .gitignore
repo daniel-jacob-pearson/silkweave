@@ -2,5 +2,7 @@
 /.yardoc/
 /stitch-old.rb
 /doc/
-/examples/site_root/
 /stitch-*.gem
+/examples/site-root/
+/examples/templates/
+/examples/page-types/

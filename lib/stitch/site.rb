@@ -6,10 +6,6 @@ module Stitch
     # instance as the argument to +run+ in a rackup configuration file
     # (+config.ru+), or otherwise integrate it into a Rack-capable Web server.
     #
-    # If you use +Needle+ directly (and you probably shouldn't), note that
-    # creating a +Site+ instance has the side effect of clearing the
-    # +middleware+ attribute of the +Needle+ class.
-    #
     # @example In a config.ru file:
     #   run Stitch::Site.new('/var/www')
     #
@@ -29,6 +25,10 @@ module Stitch
     # pathname, then it will be coerced into an absolute pathname by prefixing
     # "/", which may not produce the result you desire, so you're better off
     # only using pathnames that are already absolute.
+    #
+    # If you use +Needle+ directly (and you probably shouldn't), note that
+    # creating a +Site+ instance has the side effect of clearing the
+    # +middleware+ attribute of the +Needle+ class.
     def initialize(root, template_path=nil, pagetype_path=nil)
       @root = normalize_path root
       @template_path = if template_path.nil?
