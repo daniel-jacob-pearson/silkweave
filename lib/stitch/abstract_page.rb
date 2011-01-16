@@ -53,10 +53,10 @@ module Stitch
       raise NotImplementedError
     end
 
-    # Returns a list of the pages that are found below this page. These pages
-    # will have this page's path as their parent's path.
+    # Returns the pages that are found below this page. These pages should have
+    # this page's path as their parent's path.
     #
-    # @return [Array<AbstractPage>]
+    # @return [Enumerable<AbstractPage>]
     def children
       raise NotImplementedError
     end

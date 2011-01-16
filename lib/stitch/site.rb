@@ -50,6 +50,10 @@ module Stitch
         Needle.new(self).dispatch(:sew, ActionDispatch::Request.new(env))
       end
       Needle.middleware.clear
+      # Load all user-supplied page type classes.
+      Dir[@pagetype_path + '*.rb'].each do |page_type|
+        require page_type
+      end
     end
 
     # @return [Pathname] The directory that serves as the Web site's root.
@@ -125,10 +129,14 @@ module Stitch
     # Returns an object to model a Web page. The class of this object (also
     # known as the page type) is determined by reading a file named
     # "=page-type" found in the directory associated with the requested path.
-    # If no such file can be read, the path and its ancestors are searched for
-    # a file named ":page-type" until the parent of +self.root+ is reached, at
-    # which point +Stitch::PageTypes::PlainPage+ is used as the default page
-    # type.
+    # This file must contain nothing more than the name of a class within the
+    # +Stitch::PageTypes+ module. The class so named must implement the
+    # interface defined by +Stitch::AbstractPage+. If the "=page-type" file
+    # cannot be read, the path given as the argument and its ancestors are
+    # searched for a file named ":page-type", which will be used in the same
+    # way. If the parent of +self.root+ is reached without finding a
+    # ":page-type" file, then +Stitch::PageTypes::PlainPage+ will be used as
+    # the default page type.
     #
     # @param [#to_str, #to_path] path A path in URL space.
     #

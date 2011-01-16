@@ -71,7 +71,7 @@ module Stitch
   class InternalServerError < HTTPError; end
 end
 
-# Load all page type classes.
+# Load all page type classes that are included with the Stitch distribution.
 Dir[File.expand_path('../stitch/page_types/*.rb',__FILE__)].each do |page_type|
   require page_type
 end
@@ -79,7 +79,7 @@ end
 #--
 # I'm monkey-patching Pathname because I don't like its split personality
 # regarding #to_str and #to_path. There's no reason not to support both at the
-# same time all the time, regardless of Ruby version.
+# same time, all the time, regardless of Ruby version.
 #++
 class Pathname
   alias_method :to_str, :to_s
