@@ -17,5 +17,6 @@ Gem::Specification.new do |s|
   s.executables = ['stitch-static']
   s.add_dependency('actionpack', '>= 3.0.0')
   s.add_dependency('haml', '>= 3.0.0')
+  s.add_dependency('facets', '>= 2.9.0')
   s.has_rdoc = true
 end

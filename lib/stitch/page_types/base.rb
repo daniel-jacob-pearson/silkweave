@@ -1,3 +1,6 @@
+require 'set'
+require 'facets/denumerable'
+
 module Stitch
   module PageTypes
     # +Stitch::PageTypes::Base+ is meant to serve as a base class for deriving
@@ -21,7 +24,7 @@ module Stitch
       # @raise [Stitch::NotFound] if the given path does not refer to an
       #   accessible directory in +self.site.root+.
       def initialize path, site
-        @path = path.is_a?(Pathname) ? path : Pathname.new(path)
+        @path = path.is_a?(::Pathname) ? path : ::Pathname.new(path)
         @site = site
         raise ::Stitch::NotFound, @path.to_s unless fspath.directory?
       end
@@ -33,16 +36,16 @@ module Stitch
       #
       # @return [Pathname] The URL path that identifies this page.
       attr_reader :path
-      alias_method :urlpath, :path
-
-      # @return [Pathname] The filesystem path that corresponds to +self.path+.
-      def filesystem_path
-        site.urlpath_to_fspath(path)
-      end
-      alias_method :fspath, :filesystem_path
+      alias :urlpath :path
 
       # @return [Stitch::Site] The Web site to which this page belongs.
       attr_reader :site
+
+      # @return [Pathname] The filesystem path that corresponds to +self.path+.
+      def filesystem_path
+        @fspath ||= site.urlpath_to_fspath(path)
+      end
+      alias :fspath :filesystem_path
 
       # Defines a file-backed attribute for the page type.
       #
@@ -55,17 +58,19 @@ module Stitch
       # @param [Object] default The value the attribute should have if its file
       #   can't be read.
       #
-      # @example
+      # @example A class for pages that have a beverage associated with them.
       #   module Stitch::PageTypes
       #     class Example < Base
-      #       file_attribute :favorite_drink, "A favorite drink was not chosen."
+      #       file_attribute :beverage, "You must be thirsty without a drink."
       #     end
       #   end
       def self.file_attribute name, default=nil
         define_method name do ||
           (fspath + "@#{name}").read.chomp.html_safe rescue default
         end
-        return # We don't want to return the method we just defined.
+        @file_attribute_names ||= Set.new
+        @file_attribute_names.add name.to_s
+        return
       end
 
       # Like the +file_attribute+ method, this lets you declare page attributes
@@ -74,9 +79,15 @@ module Stitch
       # and doesn't let you specify a default value. The default value of each
       # attribute declared with this will be +nil+.
       #
+      # This method also acts as a getter for the names of the attributes
+      # that have been defined for the class (including those just defined as a
+      # result of passing in parameters).
+      #
       # @param [Array<Symbol>] names The names of the attributes to declare.
       #
-      # @example 
+      # @return [Enumerable<String>] The names of this class's file attributes.
+      #
+      # @example This is actually how PlainPage is implemented.
       #   module Stitch::PageTypes
       #     class PlainPage < Base
       #       file_attributes :title, :content
@@ -84,18 +95,52 @@ module Stitch
       #   end
       def self.file_attributes *names
         names.each { |name| file_attribute name }
-        return
+        (@file_attribute_names ||= Set.new).to_enum
       end
 
-      # Compares one page to another. Pages with identical +path+ attributes
-      # are considered identical.
+      # Returns the names of the file attributes defined for this page's type.
       #
-      # @param [AbstractPage] other The page to compare to this page.
+      # @return [Enumerable<String>] The names of this page's file attributes.
+      def file_attributes
+        self.class.file_attributes
+      end
+
+      # @return [Time] The time at which one of the page's file attributes was
+      # last modified.
+      def mtime
+        file_attributes.map { |a| fspath + "@#{a}" }.select(&:exist?).
+          map(&:mtime).max || fspath.mtime
+      end
+
+      # Comparison for value equality. All pages with the same +path+ and
+      # +site+ are considered to have the same value.
+      #
+      # @param [AbstractPage, Object] other The object to compare to this page.
+      #
+      # @return [Boolean] True if both pages are equal, false if not.
+      def eql? other
+        return false unless other.is_a? ::Stitch::AbstractPage
+        self.site == other.site and self.path == other.path
+      end
+      alias :== :eql?
+
+      # Comparison for sorting purposes. If the other is also a page, their
+      # paths are compared. Otherwise, the other is coerced into a +String+ and
+      # compared to this page's path.
+      #
+      # @param [AbstractPage, Object] other The object to compare to this page.
       #
       # @return [Fixnum] -1 if +other+ is less than the receiver, 0 if they are
       #   equal, and 1 if +other+ is greater.
       def <=> other
-        self.path.to_s <=> other.path.to_s
+        if other.responds_to? :path
+          self.path.to_s <=> other.path.to_s
+        elsif other.responds_to? :to_s
+          self.path.to_s <=> other.to_s
+        else
+          raise ::ArgumentError,
+            "comparison of #{self.class} with #{other.class} failed"
+        end
       end
 
       # Returns a list of the pages that are found below this page.
@@ -103,9 +148,9 @@ module Stitch
       # Pages of the +Ignore+ type are, predictably, ignored and thus excluded
       # from this list.
       #
-      # @return [Array<AbstractPage>]
+      # @return [Enumerable<AbstractPage>]
       def children
-        fspath.children.
+        ::Denumerator.new(fspath.children).
           select { |i| i.directory? }.
           map { |j| site.page_for "#{site.fspath_to_urlpath j}/" rescue nil }.
           reject { |k| k.nil? or k.is_a? ::Stitch::PageTypes::Ignore }
