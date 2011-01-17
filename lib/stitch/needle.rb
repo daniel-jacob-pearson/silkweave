@@ -28,24 +28,27 @@ module Stitch
     # constructs a page object from the path component of the requested URL
     # (using +Stitch::Site#page_for+), then finds the template and layout
     # associated with the page's type (using +Stitch::Needle#template_for+),
-    # and renders the template (within the associated layout, if any). The page
-    # object is passed to the template in the form of a variable named +@page+.
+    # and renders the template (within the associated layout, if any). The
+    # page's template is sought within +self.site.template_path+ and the page's
+    # layout is sought within +self.site.template_path.join(":layouts")+. The
+    # page object and site object are accessible in the template by way of the
+    # respective variables named +@page+ and +@site+.
     def sew
       append_view_path site.template_path
       @page = site.page_for(Rack::Utils.unescape(request.path_info))
       content_type = @page.content_type
       if template = template_for(@page)
-        render :template => template, :layout => template_for(@page, 'layouts/')
+        render :template => template, :layout => template_for(@page, ':layouts/')
       else
         raise InternalServerError, 
           "This site's author did not provide a template for " \
-          "<code>#{@page.class}</code> nor is there a default template."
+          "<code>#{@page.class}</code>, nor is there a default template."
       end
     rescue HTTPError
       raise
     rescue ActionView::Template::Error => e
       raise InternalServerError,
-        "In <code>#{fspath_to_urlpath e.file_name}</code>, line " \
+        "In <code>#{site.fspath_to_urlpath e.file_name}</code>, line " \
         "#{e.line_number}: #{e.message}"
     rescue StandardError => error
       raise InternalServerError, error.message
@@ -94,7 +97,7 @@ module Stitch
     # @param [String] prefix When searching the view path for a template, this
     #   string will be prefixed to the template name. This can be useful to
     #   search within a certain subdirectory of the template directory (like
-    #   "layouts/").
+    #   ":layouts/").
     #
     # @return [String, nil] The name of the template found for the +object+
     #   parameter or nil if no template could be found.
