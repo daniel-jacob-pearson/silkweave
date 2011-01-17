@@ -2,6 +2,8 @@
 - Add Blog page types.
   * Blog::Index (/diary/)
     .posts
+  * Blog::RSSIndex < Blog::Index (/diary/rss-feed/)
+  * Blog::AtomIndex < Blog::Index (/diary/atom-feed/)
   * Blog::Archive (/diary/2010/, /diary/2010/09/, /diary/2010/09/15/)
   * Blog::Post (/diary/2010/09/15/picnic-in-the-woods/)
     .date
@@ -9,8 +11,10 @@
     @summary
     @content
   * Blog::Comment (/diary/2010/09/15/picnic-in-the-woods/comment-1)
-  * Blog::RSSIndex (/diary/rss-feed/)
-  * Blog::AtomIndex (/diary/atom-feed/)
+    @content
+    @sender_name
+    @sender_email
+    .mtime
   * Categorized (mixin for pages that belong to zero or more categories)
     @categories
     .initialize [ensure category indexes are updated, then super()]
