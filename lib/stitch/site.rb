@@ -16,10 +16,16 @@ module Stitch
     #   The directory to use as the site's root.
     #
     # @param [#to_str, #to_path] template_path
-    #   The directory that contains the site's templates.
+    #   The directory that contains the site's templates. By default, the
+    #   directory named "templates" in the parent of the site root will be used
+    #   for this.
     #
     # @param [#to_str, #to_path] pagetype_path
-    #   The directory for user-defined page types.
+    #   The directory for user-defined page types. By default, the directory
+    #   named "page-types" in the parent of the site root will be used for
+    #   this. Any Ruby source files in this directory (but not in its
+    #   subdirectories) will be loaded, presumably to define new page types
+    #   within the +Stitch::PageTypes+ module.
     #
     # All arguments must be absolute pathnames. If you pass in a relative
     # pathname, then it will be coerced into an absolute pathname by prefixing
