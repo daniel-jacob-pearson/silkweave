@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.version = '0.0.1'
   s.author = 'Daniel Pearson'
   s.email = 'daniel@nanoo.org'
-  s.licence = 'ISC'
+  s.license = 'ISC'
   s.summary =
     'A framework to make a Web site out of a file tree while using templates.'
   s.description =
