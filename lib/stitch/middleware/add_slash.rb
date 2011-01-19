@@ -27,7 +27,7 @@ module Stitch
           [301, {
             'Location' => path + '/',
             'Content-Type' => 'text/html',
-            'Content-Length' => note.length.to_s
+            'Content-Length' => note.bytesize.to_s
           }, [note]]
         else
           @app.call(env)
