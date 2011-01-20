@@ -106,14 +106,16 @@ module Stitch
       end
 
       # @return [Time] The time at which one of the page's file attributes was
-      # last modified.
+      #   last modified.
       def mtime
         file_attributes.map { |a| fspath + "@#{a}" }.select(&:exist?).
           map(&:mtime).max || fspath.mtime
       end
 
       # Comparison for value equality. All pages with the same +path+ and
-      # +site+ are considered to have the same value.
+      # +site+ are considered to have the same value. An object whose class is
+      # not a descendant of +Stitch::AbstractPage+ cannot be equal to a page
+      # object.
       #
       # @param [AbstractPage, Object] other The object to compare to this page.
       #
@@ -124,9 +126,13 @@ module Stitch
       end
       alias :== :eql?
 
-      # Comparison for sorting purposes. If the other is also a page, their
-      # paths are compared. Otherwise, the other is coerced into a +String+ and
-      # compared to this page's path.
+      # Comparison for sorting purposes. You may wish to override this when
+      # subclassing to change the way pages of your new type are sorted.
+      #
+      # This implementation's comparison is based on the value returned by the
+      # +path+ method. So if the other object also has a +path+ method (as all
+      # page types must), the objects' paths are compared. Otherwise, the other
+      # is coerced into a +String+ and compared to this page's path.
       #
       # @param [AbstractPage, Object] other The object to compare to this page.
       #
