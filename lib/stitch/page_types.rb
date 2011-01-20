@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 module Stitch
   # All classes that implement page types for Stitch must be placed in the
   # +Stitch::PageTypes+ module. All such classes must implement the public

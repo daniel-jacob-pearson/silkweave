@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 module Stitch
   module Middleware
     # This Rack middleware is used instead of +ActionDispatch::Head+ because it

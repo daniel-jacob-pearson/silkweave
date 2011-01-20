@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 module Stitch
   # The representation of a Web site served by Stitch.
   class Site

@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 module Stitch
   module Middleware
     # This middleware ensures that the PATH_INFO of requests for directories

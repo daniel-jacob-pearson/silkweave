@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require 'stitch/page_types/plain_page'
 
 module Stitch

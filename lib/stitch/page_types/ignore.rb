@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 module Stitch
   module PageTypes
     # The +Ignore+ page type can be used to mark directories that should not be

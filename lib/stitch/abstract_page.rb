@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 module Stitch
   # +AbstractPage+ defines the interface that must be implemented by all
   # page types (i.e. classes within +Stitch::PageTypes+). A page type defines
