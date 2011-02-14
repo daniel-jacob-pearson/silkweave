@@ -141,9 +141,9 @@ module Stitch
       # @return [Fixnum] -1 if +other+ is less than the receiver, 0 if they are
       #   equal, and 1 if +other+ is greater.
       def <=> other
-        if other.responds_to? :path
+        if other.respond_to? :path
           self.path.to_s <=> other.path.to_s
-        elsif other.responds_to? :to_s
+        elsif other.respond_to? :to_s
           self.path.to_s <=> other.to_s
         else
           raise ::ArgumentError,
