@@ -17,8 +17,8 @@ module Stitch
     # Returns a new page object. Page objects are normally created only through
     # the +Stitch::Site#page_for+ factory. 
     #
-    # @param [#to_str, #to_path] path The path component of the URL used to
-    #   request the page.
+    # @param [Pathname] path The path component of the URL used to request the
+    #   page.
     #
     # @param [Stitch::Site] site The Web site to which the page belongs.
     def initialize path, site
@@ -31,7 +31,7 @@ module Stitch
     # access the page. This +path+ is a URL path that uniquely identifies a
     # page. Two pages with the same path should be equivalent.
     #
-    # @return [#to_str] The URL path that identifies this page.
+    # @return [Pathname] The URL path that identifies this page.
     def path
       raise NotImplementedError
     end
@@ -50,7 +50,7 @@ module Stitch
     # path. For example, the parent of the page for "/x/y/z" should be the page
     # for "/x/y".
     #
-    # @return [AbstractPage] The parent of the receiver.
+    # @return [AbstractPage] The parent of this page.
     def parent
       raise NotImplementedError
     end

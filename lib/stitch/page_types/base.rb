@@ -18,8 +18,8 @@ module Stitch
       # Creates a new page object to access the attributes stored in the
       # filesystem path that corresponds to the given URL path.
       #
-      # @param [#to_str, #to_path] path The path component of the URL
-      #   used to request the page.
+      # @param [Pathname] path The path component of the URL used to request
+      #   the page.
       #
       # @param [Stitch::Site] site The Web site to which the page belongs.
       #

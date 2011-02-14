@@ -50,10 +50,10 @@ module Stitch
       raise
     rescue ActionView::Template::Error => e
       raise InternalServerError,
-        "In <code>#{site.fspath_to_urlpath e.file_name}</code>, line " \
-        "#{e.line_number}: #{e.message}"
+        "In <code>#{Rack::Utils.escape_html(site.fspath_to_urlpath e.file_name)}" \
+        "</code>, line #{e.line_number}: #{Rack::Utils.escape_html(e.message)}"
     rescue StandardError => error
-      raise InternalServerError, error.message
+      raise InternalServerError, Rack::Utils.escape_html(error.message)
     end
 
     # Whenever an +HTTPError+ is raised while generating a page with Stitch,
@@ -82,16 +82,16 @@ module Stitch
     rescue_from HTTPError, :with => :http_error_handler
 
     # Finds and returns the template associated with the given class or the
-    # given object's class. It looks for templates in the ":templates"
-    # directory within +site.root+. It first looks for a template named after
-    # the class name with "Stitch::PageTypes::" stripped from the start and
-    # inflected with +ActiveSupport::Inflector#underscore+. If there is no
-    # template with that name, then it climbs up the superclass chain until it
-    # finds a template named after the current superclass's stripped and
-    # inflected name or until either +Stitch::AbstractPage+ or +nil+ is reached.
-    # In the latter case, a final attempt is made to find a template named
-    # ":default", but if that template is not found then the function gives up
-    # and returns +nil+.
+    # given object's class. It looks for templates in the directory named by
+    # +site.template_path+. It first looks for a template named after the class
+    # name with "Stitch::PageTypes::" stripped from the start and inflected
+    # with +ActiveSupport::Inflector#underscore+. If there is no template with
+    # that name, then it climbs up the superclass chain until it finds a
+    # template named after the current superclass's stripped and inflected name
+    # until either +Stitch::AbstractPage+ or +nil+ is reached. If a template
+    # still hasn't been found, a final attempt is made to find a template named
+    # ":default". If that template is not found, then the function gives up and
+    # returns +nil+.
     #
     # @param [Class, Object] object The class or object whose associated
     #   template should be found.
