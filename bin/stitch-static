@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -w
+#!/usr/bin/env ruby
 # encoding: UTF-8
 
 require 'rubygems'
@@ -71,7 +71,7 @@ module Stitch::StaticGenerator
     paths = ['/']
     until paths.empty?
       env['PATH_INFO'] = paths.shift.to_s
-      (paths.concat site.page_for(env['PATH_INFO']).children.map &:path) rescue nil
+      paths.concat site.page_for(env['PATH_INFO']).children.map(&:path) rescue nil
       status, headers, body = site.call env.dup
       #p [status, headers, body.map.join]; print 'enter to continue'; gets # DEBUG
       output_path = site.root + env['PATH_INFO'].sub(/^\//,'') + output_filename
