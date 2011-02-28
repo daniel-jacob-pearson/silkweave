@@ -1,4 +1,3 @@
-- Designate and support a location for files containing user-defined page types.
 - Add Blog page types.
   * Blog::Index (/diary/)
     .posts
