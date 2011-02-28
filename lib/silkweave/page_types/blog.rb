@@ -1,11 +1,11 @@
 # encoding: UTF-8
 
-require 'stitch/page_types/plain_page'
-require 'stitch/page_types/categories'
+require 'silkweave/page_types/plain_page'
+require 'silkweave/page_types/categories'
 
-module Stitch
+module Silkweave
   module PageTypes
-    # The classes in this module allow you to implement a blog with Stitch.
+    # The classes in this module allow you to implement a blog with Silkweave.
     module Blog
       class Post < PlainPage
         include Categorized
@@ -45,7 +45,7 @@ module Stitch
           elsif src.respond_to? :comments
             src.comments
           else
-            raise ::Stitch::InternalServerError
+            raise ::Silkweave::InternalServerError
           end
         end
       end

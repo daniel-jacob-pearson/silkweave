@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-module Stitch
+module Silkweave
   module Middleware
     # This Rack middleware is used instead of +Rack::ContentLength+ because it
     # ignores response bodies that are instances of +Rack::Response+ (as is

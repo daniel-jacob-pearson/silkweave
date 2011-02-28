@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-module Stitch
+module Silkweave
   module PageTypes
     class Category < PlainPage
       def members

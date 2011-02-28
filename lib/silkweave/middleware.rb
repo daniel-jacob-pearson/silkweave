@@ -1,8 +1,8 @@
 # encoding: UTF-8
 
-module Stitch
+module Silkweave
   # This module contains classes that implement Rack middleware for internal
-  # use by Stitch.
+  # use by Silkweave.
   module Middleware
     extend ActiveSupport::Autoload
 

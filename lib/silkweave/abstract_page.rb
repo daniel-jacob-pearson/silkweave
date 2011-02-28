@@ -1,26 +1,26 @@
 # encoding: UTF-8
 
-module Stitch
+module Silkweave
   # +AbstractPage+ defines the interface that must be implemented by all
-  # page types (i.e. classes within +Stitch::PageTypes+). A page type defines
+  # page types (i.e. classes within +Silkweave::PageTypes+). A page type defines
   # the capabilities and requirements of the template used to render pages of
   # that type. Specifically, the page type defines the methods that can be
   # called on the +@page+ object given to a template and the content-type (i.e.
   # MIME-type) of the data that the template must produce. The decision of
   # which template to use for a page is also based on its page type (this
-  # decision is made by +Stitch::Needle#template_for+).
+  # decision is made by +Silkweave::Arachne#template_for+).
   #
   # @abstract All methods defined in this class must be implemented entirely by
   #   subclasses and must not call upon the implementations here, since there
   #   are none.
   class AbstractPage
     # Returns a new page object. Page objects are normally created only through
-    # the +Stitch::Site#page_for+ factory. 
+    # the +Silkweave::Site#page_for+ factory. 
     #
     # @param [Pathname] path The path component of the URL used to request the
     #   page.
     #
-    # @param [Stitch::Site] site The Web site to which the page belongs.
+    # @param [Silkweave::Site] site The Web site to which the page belongs.
     def initialize path, site
       raise NotImplementedError
     end
@@ -38,10 +38,10 @@ module Stitch
 
     # Accessor for the +site+ attribute.
     #
-    # Every page belongs to a Web site (represented by a +Stitch::Site+
+    # Every page belongs to a Web site (represented by a +Silkweave::Site+
     # object), whose methods are often needed for the page's rendering.
     #
-    # @return [Stitch::Site] The Web site to which this page belongs.
+    # @return [Silkweave::Site] The Web site to which this page belongs.
     def site
       raise NotImplementedError
     end

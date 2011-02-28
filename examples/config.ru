@@ -1,7 +1,7 @@
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'rubygems'
-require 'stitch'
+require 'silkweave'
 
-run Stitch::Site.new File.expand_path('../site-root', __FILE__)
+run Silkweave::Site.new File.expand_path('../site-root', __FILE__)
 
 # vim: ft=ruby

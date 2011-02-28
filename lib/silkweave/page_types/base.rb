@@ -3,16 +3,16 @@
 require 'set'
 require 'facets/denumerable'
 
-module Stitch
+module Silkweave
   module PageTypes
-    # +Stitch::PageTypes::Base+ is meant to serve as a base class for deriving
+    # +Silkweave::PageTypes::Base+ is meant to serve as a base class for deriving
     # new page types. It's not so useful when used as a page type directly. It
     # provides all the basic machinery needed for defining page types that
     # represent Web pages whose data are stored in the filesystem. Any page
-    # type for Stitch should probably inherit from this class as long as it
-    # follows the Stitch conventions regarding storing page data in the
+    # type for Silkweave should probably inherit from this class as long as it
+    # follows the Silkweave conventions regarding storing page data in the
     # filesystem.
-    class Base < ::Stitch::AbstractPage
+    class Base < ::Silkweave::AbstractPage
       include ::Comparable
 
       # Creates a new page object to access the attributes stored in the
@@ -21,14 +21,14 @@ module Stitch
       # @param [Pathname] path The path component of the URL used to request
       #   the page.
       #
-      # @param [Stitch::Site] site The Web site to which the page belongs.
+      # @param [Silkweave::Site] site The Web site to which the page belongs.
       #
-      # @raise [Stitch::NotFound] if the given path does not refer to an
+      # @raise [Silkweave::NotFound] if the given path does not refer to an
       #   accessible directory in +self.site.root+.
       def initialize path, site
         @path = path.is_a?(::Pathname) ? path : ::Pathname.new(path)
         @site = site
-        raise ::Stitch::NotFound, @path.to_s unless fspath.directory?
+        raise ::Silkweave::NotFound, @path.to_s unless fspath.directory?
       end
 
       # The +path+ of a page is the path component of the URL that was used to
@@ -40,7 +40,7 @@ module Stitch
       attr_reader :path
       alias :urlpath :path
 
-      # @return [Stitch::Site] The Web site to which this page belongs.
+      # @return [Silkweave::Site] The Web site to which this page belongs.
       attr_reader :site
 
       # @return [Pathname] The filesystem path that corresponds to +self.path+.
@@ -61,7 +61,7 @@ module Stitch
       #   can't be read.
       #
       # @example A class for pages that have a beverage associated with them.
-      #   module Stitch::PageTypes
+      #   module Silkweave::PageTypes
       #     class Example < Base
       #       file_attribute :beverage, "You must be thirsty without a drink."
       #     end
@@ -90,7 +90,7 @@ module Stitch
       # @return [Enumerable<String>] The names of this class's file attributes.
       #
       # @example This is actually how PlainPage is implemented.
-      #   module Stitch::PageTypes
+      #   module Silkweave::PageTypes
       #     class PlainPage < Base
       #       file_attributes :title, :content
       #     end
@@ -116,14 +116,14 @@ module Stitch
 
       # Comparison for value equality. All pages with the same +path+ and
       # +site+ are considered to have the same value. An object whose class is
-      # not a descendant of +Stitch::AbstractPage+ cannot be equal to a page
+      # not a descendant of +Silkweave::AbstractPage+ cannot be equal to a page
       # object.
       #
       # @param [AbstractPage, Object] other The object to compare to this page.
       #
       # @return [Boolean] True if both pages are equal, false if not.
       def eql? other
-        return false unless other.is_a? ::Stitch::AbstractPage
+        return false unless other.is_a? ::Silkweave::AbstractPage
         self.site == other.site and self.path == other.path
       end
       alias :== :eql?
@@ -161,7 +161,7 @@ module Stitch
         ::Denumerator.new(fspath.children).
           select { |i| i.directory? }.
           map { |j| site.page_for "#{site.fspath_to_urlpath j}/" rescue nil }.
-          reject { |k| k.nil? or k.is_a? ::Stitch::PageTypes::Ignore }
+          reject { |k| k.nil? or k.is_a? ::Silkweave::PageTypes::Ignore }
       end
 
       # Returns the page object for this page's parent.

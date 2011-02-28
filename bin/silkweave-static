@@ -2,10 +2,10 @@
 # encoding: UTF-8
 
 require 'rubygems'
-require 'stitch'
+require 'silkweave'
 require 'optparse'
 
-module Stitch::StaticGenerator
+module Silkweave::StaticGenerator
   class << self
     attr_accessor :site_root, :output_filename, :overwrite, :skip_existing,
       :server_name, :server_port, :url_scheme
@@ -67,7 +67,7 @@ module Stitch::StaticGenerator
       'rack.multiprocess' => true,
       'rack.run_once' => false
     }
-    site = Stitch::Site.new site_root
+    site = Silkweave::Site.new site_root
     paths = ['/']
     until paths.empty?
       env['PATH_INFO'] = paths.shift.to_s
@@ -100,4 +100,4 @@ module Stitch::StaticGenerator
   end
 end
 
-Stitch::StaticGenerator.run!
+Silkweave::StaticGenerator.run!

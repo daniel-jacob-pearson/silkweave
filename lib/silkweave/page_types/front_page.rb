@@ -1,8 +1,8 @@
 # encoding: UTF-8
 
-require 'stitch/page_types/plain_page'
+require 'silkweave/page_types/plain_page'
 
-module Stitch
+module Silkweave
   module PageTypes
     # A front page is functionally identical to a plain page, but since it has
     # a different name, it can use a different template. This is handy in real

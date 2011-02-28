@@ -7,7 +7,7 @@ require 'action_dispatch'
 require 'haml'
 require 'haml/template'
 
-# Stitch is a framework for creating a Web site out of a file tree with the
+# Silkweave is a framework for creating a Web site out of a file tree with the
 # help of templates.  
 #
 # [Author]    Daniel Pearson (mailto:daniel@nanoo.org)
@@ -29,20 +29,20 @@ require 'haml/template'
 # PERFORMANCE OF THIS SOFTWARE.
 #
 # == Deployment
-# Stitch is deployed with Rack (see http://rack.rubyforge.org/). Instances of
-# the +Stitch::Site+ class are Rack app objects appropriate for deploying with
+# Silkweave is deployed with Rack (see http://rack.rubyforge.org/). Instances of
+# the +Silkweave::Site+ class are Rack app objects appropriate for deploying with
 # a Rack-capable Web server.
 #
 # == URL Paths Versus Filesystem Paths
-# In various parts of the documentation for Stitch, two types of file pathnames
+# In various parts of the documentation for Silkweave, two types of file pathnames
 # are distinguished with the terms "URL path" and "filesystem path". "URL
 # paths" are path names used to locate resources on a Web site. They are the
 # sort of path that a Web browser requests from a Web server. "Filesystem
 # paths" are path names that locate objects on the Web server's filesystem.
-module Stitch
+module Silkweave
   extend ActiveSupport::Autoload
 
-  autoload :Needle
+  autoload :Arachne
   autoload :AbstractPage
   autoload :PageTypes
   autoload :Middleware
@@ -73,8 +73,8 @@ module Stitch
   class InternalServerError < HTTPError; end
 end
 
-# Load all page type classes that are included with the Stitch distribution.
-Dir[File.expand_path('../stitch/page_types/*.rb',__FILE__)].each do |page_type|
+# Load all page type classes that are included with the Silkweave distribution.
+Dir[File.expand_path('../silkweave/page_types/*.rb',__FILE__)].each do |page_type|
   require page_type
 end
 

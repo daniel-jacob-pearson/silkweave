@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-module Stitch
+module Silkweave
   module Middleware
     # This middleware ensures that the PATH_INFO of requests for directories
     # ends with a slash. It does so by sending a 301 redirection response when

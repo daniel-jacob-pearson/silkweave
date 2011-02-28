@@ -1,8 +1,7 @@
 .*.sw?
 /.yardoc/
-/stitch-old.rb
 /doc/
-/stitch-*.gem
+/silkweave-*.gem
 /examples/site-root/
 /examples/templates/
 /examples/page-types/

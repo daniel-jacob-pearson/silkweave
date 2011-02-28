@@ -1,18 +1,18 @@
 # encoding: UTF-8
 
-module Stitch
-  # The representation of a Web site served by Stitch.
+module Silkweave
+  # The representation of a Web site served by Silkweave.
   class Site
-    # Returns an object that represents a Stitch-based Web site. Since every
+    # Returns an object that represents a Silkweave-based Web site. Since every
     # +Site+ instance is a Rack (end-point) application, you can use such an
     # instance as the argument to +run+ in a rackup configuration file
     # (+config.ru+), or otherwise integrate it into a Rack-capable Web server.
     #
     # @example In a config.ru file:
-    #   run Stitch::Site.new('/var/www')
+    #   run Silkweave::Site.new('/var/www')
     #
     # @example Running as a CGI script:
-    #   Rack::Handler::CGI.run Stitch::Site.new('/home/nancy/public_html')
+    #   Rack::Handler::CGI.run Silkweave::Site.new('/home/nancy/public_html')
     #
     # @param [#to_str, #to_path] root
     #   The directory to use as the site's root.
@@ -27,16 +27,16 @@ module Stitch
     #   named "page-types" in the parent of the site root will be used for
     #   this. Any Ruby source files in this directory (but not in its
     #   subdirectories) will be loaded, presumably to define new page types
-    #   within the +Stitch::PageTypes+ module.
+    #   within the +Silkweave::PageTypes+ module.
     #
     # All arguments must be absolute pathnames. If you pass in a relative
     # pathname, then it will be coerced into an absolute pathname by prefixing
     # "/", which may not produce the result you desire, so you're better off
     # only using pathnames that are already absolute.
     #
-    # If you use +Needle+ directly (and you probably shouldn't), note that
+    # If you use +Arachne+ directly (and you probably shouldn't), note that
     # creating a +Site+ instance has the side effect of clearing the
-    # +middleware+ attribute of the +Needle+ class.
+    # +middleware+ attribute of the +Arachne+ class.
     def initialize(root, template_path=nil, pagetype_path=nil)
       @root = normalize_path root
       @template_path = if template_path.nil?
@@ -49,15 +49,15 @@ module Stitch
       else
         normalize_path pagetype_path
       end
-      Needle.middleware.clear
-      Needle.use Middleware::Head
-      Needle.use Middleware::AddSlash, @root.to_s
-      Needle.use Middleware::Length
-      Needle.use ActionDispatch::Static, @root.to_s
-      @page_renderer = Needle.middleware.build('sew') do |env|
-        Needle.new(self).dispatch(:sew, ActionDispatch::Request.new(env))
+      Arachne.middleware.clear
+      Arachne.use Middleware::Head
+      Arachne.use Middleware::AddSlash, @root.to_s
+      Arachne.use Middleware::Length
+      Arachne.use ActionDispatch::Static, @root.to_s
+      @page_renderer = Arachne.middleware.build('sew') do |env|
+        Arachne.new(self).dispatch(:sew, ActionDispatch::Request.new(env))
       end
-      Needle.middleware.clear
+      Arachne.middleware.clear
       # Load all user-supplied page type classes.
       Dir[@pagetype_path + '*.rb'].each do |page_type|
         require page_type
@@ -138,22 +138,22 @@ module Stitch
     # known as the page type) is determined by reading a file named
     # "=page-type" found in the directory associated with the requested path.
     # This file must contain nothing more than the name of a class within the
-    # +Stitch::PageTypes+ module. The class so named must implement the
-    # interface defined by +Stitch::AbstractPage+. If the "=page-type" file
+    # +Silkweave::PageTypes+ module. The class so named must implement the
+    # interface defined by +Silkweave::AbstractPage+. If the "=page-type" file
     # cannot be read, the path given as the argument and its ancestors are
     # searched for a file named ":page-type", which will be used in the same
     # way. If the parent of +self.root+ is reached without finding a
-    # ":page-type" file, then +Stitch::PageTypes::PlainPage+ will be used as
+    # ":page-type" file, then +Silkweave::PageTypes::PlainPage+ will be used as
     # the default page type.
     #
     # @param [#to_str, #to_path] path A path in URL space.
     #
     # @return [AbstractPage] A new instance of one of the classes in the
-    #   +Stitch::PageTypes+ module, initialized with the given +path+.
+    #   +Silkweave::PageTypes+ module, initialized with the given +path+.
     #
     # @raise [InternalServerError] if the page type specified in the
     #   "=page-type" or ":page-type" file is not the name of a class in
-    #   +Stitch::PageTypes+.
+    #   +Silkweave::PageTypes+.
     def page_for path
       path = normalize_path path
       private_type_file = urlpath_to_fspath(path + '=page-type')
@@ -163,7 +163,7 @@ module Stitch
         find_upward(path, ':page-type', StringIO.new('PlainPage'))
       end
       begin
-        "Stitch::PageTypes::#{type_file.read.strip}".constantize.new(path, self)
+        "Silkweave::PageTypes::#{type_file.read.strip}".constantize.new(path, self)
       rescue NameError, NoMethodError, ArgumentError => error
         type = type_file.read.strip.inspect
         if type_file.is_a? Pathname
@@ -173,7 +173,7 @@ module Stitch
         end
         case error
         when NameError
-          reason = 'it does not name a member of the Stitch::PageTypes module'
+          reason = 'it does not name a member of the Silkweave::PageTypes module'
         when NoMethodError
           reason = 'it is not the name of a class'
         when ArgumentError
