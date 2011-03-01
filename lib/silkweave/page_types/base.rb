@@ -53,7 +53,11 @@ module Silkweave
       #
       # The attribute's value is the content of a file whose name is "@"
       # followed by the name of the attribute. This file is located in the
-      # directory referred to by the page's filesystem path.
+      # directory referred to by the page's filesystem path. For example, if a
+      # page object has a file attribute named "title", then calling the
+      # +title+ method on the page object will return the content of the file
+      # named "@title" in the directory named by the page object's
+      # +filesystem_path+.
       #
       # @param [Symbol] name The name of the attribute to declare.
       #
