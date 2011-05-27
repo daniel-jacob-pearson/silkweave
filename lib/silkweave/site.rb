@@ -9,7 +9,7 @@ module Silkweave
     # (+config.ru+), or otherwise integrate it into a Rack-capable Web server.
     #
     # @example In a config.ru file:
-    #   run Silkweave::Site.new('/var/www')
+    #   run Silkweave::Site.new('/var/www', '/var/www/templates')
     #
     # @example Running as a CGI script:
     #   Rack::Handler::CGI.run Silkweave::Site.new('/home/nancy/public_html')
@@ -228,6 +228,7 @@ module Silkweave
       path
     end
 
+    # :nodoc:
     SLASH = Pathname.new '/'
   end
 end
