@@ -7,15 +7,16 @@ require 'optparse'
 
 module Silkweave::StaticGenerator
   class << self
-    attr_accessor :site_root, :output_filename, :overwrite, :skip_existing,
-      :server_name, :server_port, :url_scheme
+    attr_accessor :site_root, :template_dir, :pagetype_dir, :output_filename,
+      :overwrite, :server_name, :server_port, :url_scheme
   end
 
   # Defaults for options
   self.site_root = Dir.pwd
+  self.template_dir = nil
+  self.pagetype_dir = nil
   self.output_filename = 'index.html'
-  self.overwrite = false
-  self.skip_existing = false
+  self.overwrite = 'ask'
   self.server_name = 'localhost'
   self.server_port = '80'
   self.url_scheme = 'http'
@@ -23,32 +24,41 @@ module Silkweave::StaticGenerator
   def self.run!
     OptionParser.new do |opts|
       opts.on('-r', '--root DIRECTORY',
-              "Use DIRECTORY as the site's root (default: current directory).") do |dir|
+              "Use DIRECTORY as the site's root.",
+              '(default: the current directory)') do |dir|
         self.site_root = Pathname.new(Dir.pwd) + dir
       end
+      opts.on('-t', '--templates DIRECTORY',
+              "Look in DIRECTORY for the site's templates.",
+              '(default: the directory named "templates" in the parent of the site root)') do |dir|
+        self.template_dir = Pathname.new(Dir.pwd) + dir
+      end
+      opts.on('-T', '--page-types DIRECTORY',
+              "Look in DIRECTORY for custom page types.",
+              '(default: the directory named "page-types" in the parent of the site root)') do |dir|
+        self.pagetype_dir = Pathname.new(Dir.pwd) + dir
+      end
       opts.on('-o', '--output FILENAME',
-              "Write each generated page to the file named FILENAME (default: index.html).") do |fname|
+              "Write each generated page to the file named FILENAME in the page's directory.",
+              '(default: "index.html")') do |fname|
         self.output_filename = fname
       end
-      opts.on('-f', '--[no-]force-ovewrite',
-              "Overwrite even if a file with that name already exists (default: false).") do |force|
-        self.overwrite = force
-      end
-      opts.on('-k', '--[no-]skip-existing', 
-              "Skip generation of a file if it already exists (default: false).",
-              "This takes precedence over --force-overwrite.") do |skip| 
-        self.skip_existing = skip
+      opts.on('-O', '--overwrite BEHAVIOR', ['yes', 'no', 'ask'],
+              "Choose whether to overwrite files that already exist.",
+              'BEHAVIOR must be either "yes", "no", or "ask". (default: "ask")') do |choice|
+        self.overwrite = choice.downcase
       end
       opts.on('-s', '--server HOSTNAME',
-              "Use HOSTNAME as the domain name of the site (default: localhost).") do |hostname|
+              "Use HOSTNAME as the domain name of the site. (default: localhost)") do |hostname|
         self.server_name = hostname
       end
       opts.on('-p', '--port PORT', 
-              "Use PORT as the TCP port number used to access the site (default: 80).") do |port|
+              "Use PORT as the TCP port number used to access the site. (default: 80)") do |port|
         self.server_port = port
       end
       opts.on('-u', '--url-scheme SCHEME', 
-              "Use SCHEME as the protocol component of URLs used to access the site (default: http).") do |scheme|
+              'Use SCHEME as the protocol component of URLs used to access the site.',
+              '(default: "http")') do |scheme|
         self.url_scheme = scheme
       end
     end.parse!
@@ -67,31 +77,48 @@ module Silkweave::StaticGenerator
       'rack.multiprocess' => true,
       'rack.run_once' => false
     }
-    site = Silkweave::Site.new site_root
-    paths = ['/']
+    site = Silkweave::Site.new site_root, template_dir, pagetype_dir
+    paths = ['/'] # A stack of URL paths to request.
     until paths.empty?
+      # Pop a URL path from the top of the stack.
       env['PATH_INFO'] = paths.shift.to_s
-      paths.concat site.page_for(env['PATH_INFO']).children.map(&:path) rescue nil
-      status, headers, body = site.call env.dup
-      #p [status, headers, body.map.join]; print 'enter to continue'; gets # DEBUG
+      # Push the children of this URL's page onto the stack.
+      paths.concat site.page_for(env['PATH_INFO']).children.map(&:path).to_a rescue nil
+
       output_path = site.root + env['PATH_INFO'].sub(/^\//,'') + output_filename
       if output_path.exist?
-        if skip_existing
-          puts "\"#{output_path}\" already exists, so it is being skipped."
+        case overwrite
+        when 'yes'
+          puts "\"#{output_path}\" already exists, but will be overwritten."
+        when 'no'
+          puts "\"#{output_path}\" already exists, so it will not be overwritten."
           next
-        end
-        unless overwrite
+        else
+          unless overwrite === 'ask'
+            puts "Warning: #{overwrite} is not a valid argument for --overwrite."
+            self.overwrite = 'ask'
+          end
           print "\"#{output_path}\" already exists. Should it be overwritten? (y/N) "
           unless gets =~ /^y/i
-            puts "Skipped \"#{output_path}\"."
+            puts "\"#{output_path}\" will not be overwritten."
             next 
+          else
+            puts "\"#{output_path}\" will be overwritten."
           end
         end
       end
+
+      # Get the rendered page for the current URL path.
+      status, headers, body = site.call env.dup
+      #p [status, headers, body.map.join]; print 'enter to continue'; gets # DEBUG
       if status.between? 200, 299
         print "Generating \"#{output_path}\" ... "
-        output_path.open('w') {|f| body.each {|s| f.write s}}
-        puts "done."
+        begin
+          output_path.open('w') {|f| body.each {|s| f.write s}}
+          puts "done."
+        rescue
+          puts "Error: #{$!}"
+        end
       else
         puts "\"#{url_scheme}://#{server_name}:#{server_port}#{env['PATH_INFO']}\"" \
              " isn't a valid page, so it's being skipped."
@@ -100,4 +127,4 @@ module Silkweave::StaticGenerator
   end
 end
 
-Silkweave::StaticGenerator.run!
+Silkweave::StaticGenerator.run! rescue puts "Error: #{$!}"
