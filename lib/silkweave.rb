@@ -86,13 +86,15 @@ end
 class Pathname
   alias_method :to_str, :to_s
   alias_method :to_path, :to_s
-  old_init = self.instance_method :initialize
-  define_method :initialize do |path|
-    if path.respond_to? :to_str
-      path = path.__send__ :to_str
-    elsif path.respond_to? :to_path
-      path = path.__send__ :to_path
+  module SilkweavePatch
+    def initialize path
+      if path.respond_to? :to_str
+        path = path.to_str
+      elsif path.respond_to? :to_path
+        path = path.to_path
+      end
+      super path
     end
-    old_init.bind(self).call(path)
   end
+  include SilkweavePatch
 end
