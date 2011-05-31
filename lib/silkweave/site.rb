@@ -1,7 +1,10 @@
 # encoding: UTF-8
 
 module Silkweave
-  # The representation of a Web site served by Silkweave.
+  # The representation of a Web site served by Silkweave. It provides two main
+  # functions: getting object representations of pages within the site (by
+  # using the +#page_for+ method) and rendering pages (by using the +#call+
+  # method).
   class Site
     # Returns an object that represents a Silkweave-based Web site. Since every
     # +Site+ instance is a Rack (end-point) application, you can use such an
