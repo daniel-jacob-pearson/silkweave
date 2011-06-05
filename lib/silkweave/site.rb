@@ -192,6 +192,35 @@ module Silkweave
       end
     end
 
+    # @private
+    #
+    # Returns a code-like, yet human-readable string representation of the
+    # site. This makes +Site+ objects look prettier in irb.
+    def inspect
+      "#<#{self.class} @root=#{@root.to_s.inspect}, " +
+        "@template_path=#{@template_path.to_s.inspect}, " +
+        "@pagetype_path=#{@pagetype_path.to_s.inspect}>"
+    end
+
+    # @private
+    #
+    # Two sites are equal if they were initialized with the same paths.
+    def eql? other
+      return false unless other.is_a? Silkweave::Site
+      @root == other.root and
+        @template_path == other.template_path and
+        @pagetype_path == other.pagetype_path 
+    end
+    alias :== :eql?
+
+    # @private
+    #
+    # Two sites have the same hash code if they were initialized with the same
+    # paths.
+    def hash
+      @root.hash ^ @template_path.hash ^ @pagetype_path.hash
+    end
+
     private
 
     # Checks the given directory for a readable file with the given name. If
