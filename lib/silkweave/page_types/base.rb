@@ -1,7 +1,8 @@
 # encoding: UTF-8
 
 require 'set'
-require 'facets/denumerable'
+require 'facets/enumerable/defer'
+require 'silkweave/abstract_page'
 
 module Silkweave
   module PageTypes
@@ -86,7 +87,7 @@ module Silkweave
       # attribute declared with this will be +nil+.
       #
       # This method also acts as a getter for the names of the attributes
-      # that have been defined for the class (including those just defined as a
+      # that have been defined for the class (including those defined as a
       # result of passing in parameters).
       #
       # @param [Array<Symbol>] names The names of the attributes to declare.
@@ -101,7 +102,8 @@ module Silkweave
       #   end
       def self.file_attributes *names
         names.each { |name| file_attribute name }
-        (@file_attribute_names ||= Set.new).to_enum
+        (@file_attribute_names ||= Set.new) +
+          (superclass.respond_to?('file_attributes') ? superclass.file_attributes : [])
       end
 
       # Returns the names of the file attributes defined for this page's type.
@@ -132,6 +134,14 @@ module Silkweave
       end
       alias :== :eql?
 
+      # Computes a hash code for the page.
+      #
+      # @return [Fixnum] A number that will be the same for any other page
+      #   within the same site with the same path and the same page type.
+      def hash
+        self.class.hash ^ @site.hash ^ @path.hash
+      end
+
       # Comparison for sorting purposes. You may wish to override this when
       # subclassing to change the way pages of your new type are sorted.
       #
@@ -155,18 +165,32 @@ module Silkweave
         end
       end
 
-      # Returns a list of the pages that are found below this page.
+      # Returns an enumerator over the pages that are found below this page in
+      # the site hierarchy. If a block is given, it iterates over each child
+      # page and returns the receiver.
       #
-      # Pages of the +Ignore+ type are, predictably, ignored and thus excluded
-      # from this list.
+      # Pages of the +Ignore+ type are, predictably, ignored and thus excluded.
       #
-      # @return [Enumerable<AbstractPage>]
-      def children
-        ::Denumerator.new(fspath.children).
-          select { |i| i.directory? }.
-          map { |j| site.page_for "#{site.fspath_to_urlpath j}/" rescue nil }.
-          reject { |k| k.nil? or k.is_a? ::Silkweave::PageTypes::Ignore }
+      # @yield [child]
+      #
+      # @yieldparam [AbstractPage] child
+      #
+      # @return [Enumerable<AbstractPage>, self]
+      def children &block
+        enum = ::Dir.new(fspath).defer.
+          reject {|x| x == '.' || x == '..' }.
+          map    {|x| fspath + x }.
+          select {|x| x.directory? }.
+          map    {|x| site.page_for "#{site.fspath_to_urlpath x}/" rescue nil }.
+          reject {|x| x.nil? or x.is_a? ::Silkweave::PageTypes::Ignore }
+        if block
+          enum.each &block
+          self
+        else
+          enum
+        end
       end
+      alias :each_child :children
 
       # Returns the page object for this page's parent.
       #
@@ -175,14 +199,23 @@ module Silkweave
         site.page_for(path.parent)
       end
 
-      # The Content-type HTTP header used for serving this type of page.
+      # Returns the Content-type HTTP header used for serving this type of
+      # page. This method is called by Silkweave automatically when serving a
+      # page. A template author usually has no reason to call this explicitly.
+      # However, a page type author should override this if implementing a page
+      # type that renders into a format other than HTML.
       #
       # @return [String] <tt>"text/html"</tt>
-      #
-      # Override this if you are implementing a page type that renders into a
-      # format other than HTML.
       def content_type
         'text/html'
+      end
+
+      # @private
+      #
+      # Make page objects look prettier in irb.
+      def inspect
+        "#<#{self.class} @path=#{@path.to_s.inspect}, " +
+          "@file_attributes=#{file_attributes.to_a.inspect}>"
       end
     end
   end
