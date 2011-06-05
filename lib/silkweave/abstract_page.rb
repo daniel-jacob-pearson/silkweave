@@ -55,11 +55,23 @@ module Silkweave
       raise NotImplementedError
     end
 
-    # Returns the pages that are found below this page. These pages should have
-    # this page's path as their parent's path.
+    # Returns the pages that are found below this page in the site hierarchy.
+    # These pages should have this page's path as their parent's path.
     #
     # @return [Enumerable<AbstractPage>]
     def children
+      raise NotImplementedError
+    end
+
+    # Calls the given block for each child of this page (as given by
+    # +#children+).
+    #
+    # @yield [child]
+    #
+    # @yieldparam [AbstractPage] child
+    #
+    # @return [self]
+    def each_child(&block)
       raise NotImplementedError
     end
 
