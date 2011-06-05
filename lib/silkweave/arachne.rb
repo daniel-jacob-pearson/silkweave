@@ -8,6 +8,7 @@ module Silkweave
   # request handling and template rendering by delegating to the ActionPack
   # library (which is a part of Ruby on Rails). 
   class Arachne < ActionController::Metal
+    include AbstractController::Logger
     include AbstractController::Layouts
     include ActionController::UrlFor # required for "render :location => foo"
     include ActionController::Helpers
@@ -46,8 +47,6 @@ module Silkweave
           "This site's author did not provide a template for " \
           "<code>#{@page.class}</code>, nor is there a default template."
       end
-    rescue HTTPError
-      raise
     rescue ActionView::Template::Error => e
       raise InternalServerError,
         "In <code>#{Rack::Utils.escape_html(site.fspath_to_urlpath e.file_name)}" \
@@ -119,8 +118,10 @@ module Silkweave
     end
     helper_method :template_for
 
-    # :nodoc:
+    # --
     # Required for including ActionController::UrlFor.
+    # ++
+    # :nodoc:
     def self._routes
       ActionDispatch::Routing::RouteSet.new
     end
