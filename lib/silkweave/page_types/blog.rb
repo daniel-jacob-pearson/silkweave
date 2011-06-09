@@ -39,10 +39,13 @@ module Silkweave
         alias :each_comment :comments
       end
 
-      # A +Blog::Folder+ is a collection of +Blog::Posts+. It should be the
-      # root page of any blog. The posts contained by a folder are all the
-      # posts that are children of the folder and all posts that are contained
-      # by any child folders.
+      # A +Blog::Folder+ is a collection of +Blog::Posts+. The posts contained
+      # by a folder are all the posts that are children of the folder and all
+      # posts that are contained by any child folders. Generally, every blog
+      # post should have a blog folder as its parent, and every blog folder
+      # except the root of the blog should have a folder as its parent. This
+      # allows the root page of a blog to yield every post in the blog through
+      # its +#posts+ method.
       class Folder < PlainPage
         include NewestFirst
 
@@ -72,6 +75,15 @@ module Silkweave
           end
         end
         alias :each_post :posts
+      end
+
+      # A +Blog::Index+ is meant for use as the front page and root of a blog.
+      # It is funtionally identical to a +Blog::Folder+, but since it is a
+      # distinct type, a different template can be used for it. For example,
+      # this allows you to list all the contained posts when rendering a
+      # +Folder+, while only listing the 10 most recent posts when rendering an
+      # +Index+.
+      class Index < Folder
       end
 
       # A +Blog::Comment+ represents a comment attached to a blog post.
