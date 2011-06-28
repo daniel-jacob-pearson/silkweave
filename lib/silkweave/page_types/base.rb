@@ -217,6 +217,13 @@ module Silkweave
         "#<#{self.class} @path=#{@path.to_s.inspect}, " +
           "@file_attributes=#{file_attributes.to_a.inspect}>"
       end
+
+      # @private
+      #
+      # Conversion to String.
+      def to_s
+        path.to_s
+      end
     end
   end
 end
