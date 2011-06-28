@@ -52,7 +52,7 @@ module Silkweave
       #
       # @param [Enumerable<String>] members The URL paths of the members.
       def rewrite_members members
-        (fspath + '.members').open('w') {|f| members.each {|m| f.write(m+"\n")}}
+        (fspath + '.members').open('w') {|f| members.each {|m| f.puts(m)}}
         return
       end
     end
@@ -125,7 +125,7 @@ module Silkweave
             (previous_categories - current_categories).
               each { |category| category.send(:delete_member, path.to_s) }
             update_file.open('w') { |f|
-              current_categories.each { |c| f.write("#{c.path}\n") }
+              current_categories.each { |c| f.puts(c.path) }
             }
             return current_categories
           end
