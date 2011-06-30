@@ -239,11 +239,9 @@ module Silkweave
     # @return [Pathname, Object] Either the filesystem path to the target file,
     #   if it was found, or +default+, if it was not found.
     def find_upward(path, target, default = nil)
-      looked = []
       path.ascend do |p|
         fspath = urlpath_to_fspath(p + target)
         return fspath if fspath.readable?
-        looked << p
         break if p == SLASH
       end
       return default
