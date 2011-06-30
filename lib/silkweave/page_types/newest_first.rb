@@ -7,19 +7,25 @@ module Silkweave
     # module enables that behavior when mixed into a page type.
     #
     # Note that the implementation of the +#pubtime+ method included in this
-    # module relies on the +#fspath+ method, so unless you override +#pubtime+
-    # in the including page type, the page type should inherit from
-    # +Silkweave::PageTypes::Base+.
+    # module relies on the +#fspath+ and +#mtime+ methods, so unless the
+    # including page type overrides +#pubtime+, the including page type should
+    # inherit from +Silkweave::PageTypes::Base+ (or implement its own +#fspath+
+    # and +#mtime+ methods).
     module NewestFirst
-      # This attribute represents the time at which the page was published.
-      # This is distinct from +mtime+, which is the time at which the page
-      # was modified. Technically speaking, this value is taken directly from
-      # the modification time of the directory named by this page's
-      # filesystem path.
+      # This attribute represents the time at which a page was published. This
+      # is the same as the page's modification time (which is accessed with
+      # +#mtime+) unless the directory named by the page's filesystem path
+      # contains a file named ":publication-date", in which case the
+      # modification time of that file will be returned instead.
       #
       # @return [Time] The time at which the receiver was published.
       def pubtime
-        fspath.mtime
+        pub_file = fspath + ':publication-date'
+        if pub_file.exist?
+          pub_file.mtime
+        else
+          mtime
+        end
       end
 
       # Comparison for sorting purposes. Compares to the other object's
