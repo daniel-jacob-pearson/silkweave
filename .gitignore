@@ -2,7 +2,4 @@
 /.yardoc/
 /doc/
 /silkweave-*.gem
-/examples/site-root/
-/examples/templates/
-/examples/page-types/
-/test.rb
+/test/
