@@ -28,7 +28,7 @@ module Silkweave
         #
         # @return [Enumerable<Blog::Comment>, self]
         def comments &block
-          enum = children.sort.defer.select {|x| x.is_a? Comment}
+          enum = children.select {|x| x.is_a? Comment}.sort.defer
           if block
             enum.each &block
             self
@@ -37,6 +37,45 @@ module Silkweave
           end
         end
         alias :each_comment :comments
+
+        # Not ready yet
+        #
+        #def next_generic comparison_op, post_accessor
+        #  root = Pathname.new '/'
+        #  ancestor = parent
+        #  while true
+        #    # A post should normally exist in a parent folder. If it doesn't,
+        #    # then it definitely has no succeeding or preceding post.
+        #    return nil unless ancestor.is_a? Folder
+        #    # If this post has folders or posts as siblings, and those siblings
+        #    # are older than this post, then the newest of these is the next
+        #    # post (in the case of a post) or contains the next post as its
+        #    # first post (in the case of a folder).
+        #    # If the parent folder has no other posts or folders as children,
+        #    # then the parent's parent should be inspected.
+        #    sibling = ancestor.children.select { |x|
+        #      (x.is_a? Post or x.is_a? Folder) and self < x
+        #    }.sort.first
+        #    case sibling
+        #    when Post
+        #      return sibling
+        #    when Folder
+        #      return sibling.posts.first
+        #    else
+        #      return nil if ancestor.path == root
+        #      ancestor = ancestor.parent
+        #    end
+        #  end
+        #end
+        #private :next_generic
+
+        #def next_older
+        #  next_generic :<, :posts
+        #end
+
+        #def next_newer
+        #  next_generic :>, :posts_reversed
+        #end
       end
 
       # A +Blog::Folder+ is a collection of +Blog::Posts+. The posts contained
