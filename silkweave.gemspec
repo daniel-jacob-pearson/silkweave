@@ -2,10 +2,11 @@
 
 Gem::Specification.new do |s|
   s.name = 'silkweave'
-  s.version = '0.0.1'
+  s.version = '0.0.2'
+  s.homepage = 'http://nanoo.org/silkweave'
   s.author = 'Daniel Pearson'
   s.email = 'daniel@nanoo.org'
-  s.license = 'ISC'
+  s.license = 'MIT'
   s.summary =
     'A framework to make a Web site out of a file tree while using templates.'
   s.description =
