@@ -20,49 +20,69 @@ module Silkweave
     # @param [#to_str, #to_path] root
     #   The directory to use as the site's root.
     #
-    # @param [#to_str, #to_path] template_path
+    # @param [Hash] options Optional settings for the +Site+.
+    #
+    # @option options [#to_str, #to_path] :template_dir ("#{root}/../templates")
     #   The directory that contains the site's templates. By default, the
     #   directory named "templates" in the parent of the site root will be used
     #   for this.
     #
-    # @param [#to_str, #to_path] pagetype_path
+    # @option options [#to_str, #to_path] :pagetype_dir ("#{root}/../page-types")
     #   The directory for user-defined page types. By default, the directory
     #   named "page-types" in the parent of the site root will be used for
     #   this. Any Ruby source files in this directory (but not in its
     #   subdirectories) will be loaded, presumably to define new page types
     #   within the +Silkweave::PageTypes+ module.
     #
-    # All arguments must be absolute pathnames. If you pass in a relative
-    # pathname, then it will be coerced into an absolute pathname by prefixing
-    # "/", which may not produce the result you desire, so you're better off
-    # only using pathnames that are already absolute.
+    # @option options [#to_str, #to_path] :type_map_file ("#{root}/../type-map.yaml")
+    #   The file that contains instructions for mapping page paths to page
+    #   types. This file must use the YAML format to specify a list of pairs of
+    #   strings. The first member of each pair will be interpreted as a regular
+    #   expression. The second member of each pair will be interpreted as the
+    #   name of a class (relative to the +Silkweave::PageTypes+ module).
+    #   Whenever a path is requested from the +Site+, that path will be matched
+    #   against each regular expression in order of appearance. When a match
+    #   first succeeds, the class associated with the regular expression will
+    #   be used to create the page object for the requested path.
+    #
+    # @option options [true, false] :enable_editing (false)
+    #   If set to true, it will be possible to edit the site by way of HTTP
+    #   requests. (This has not yet been implemented.)
+    #
+    # All pathnames passed as arguments or options must be absolute pathnames.
+    # If you pass in a relative pathname, then it will be coerced into an
+    # absolute pathname by prefixing "/", which may not produce the result you
+    # desire, so you're better off only using pathnames that are already
+    # absolute.
     #
     # If you use +Arachne+ directly (and you probably shouldn't), note that
     # creating a +Site+ instance has the side effect of clearing the
     # +middleware+ attribute of the +Arachne+ class.
-    def initialize(root, template_path=nil, pagetype_path=nil)
+    def initialize(root, options={})
       @root = normalize_path root
-      @template_path = if template_path.nil?
-        Pathname.new('../templates').expand_path(@root)
-      else
-        normalize_path template_path
-      end
-      @pagetype_path = if pagetype_path.nil?
-        Pathname.new('../page-types').expand_path(@root)
-      else
-        normalize_path pagetype_path
-      end
+      defaults = {
+        :template_dir => Pathname.new('../templates').expand_path(@root),
+        :pagetype_dir => Pathname.new('../page-types').expand_path(@root),
+        :type_map_file => Pathname.new('../type-map.yaml').expand_path(@root),
+        :enable_editing => false
+      }
+      options = defaults.merge(options)
+      @template_dir = normalize_path options[:template_dir]
+      @pagetype_dir = normalize_path options[:pagetype_dir]
+      @type_map_file = normalize_path options[:type_map_file]
+      @type_map = nil
+      @type_map_updated_at = -1.0/0.0 # -Infinity
       Arachne.middleware.clear
       Arachne.use Middleware::Head
       Arachne.use Middleware::AddSlash, @root.to_s
       Arachne.use Middleware::Length
       Arachne.use ActionDispatch::Static, @root.to_s
-      @page_renderer = Arachne.middleware.build('sew') do |env|
-        Arachne.new(self).dispatch(:sew, ActionDispatch::Request.new(env))
+      @page_renderer = Arachne.middleware.build(:weave) do |env|
+        Arachne.new(self).dispatch(:weave, ActionDispatch::Request.new(env))
       end
       Arachne.middleware.clear
       # Load all user-supplied page type classes.
-      Dir[@pagetype_path + '*.rb'].each do |page_type|
+      Dir[@pagetype_dir + '*.rb'].each do |page_type|
         require page_type
       end
     end
@@ -74,10 +94,17 @@ module Silkweave
     attr_reader :root
 
     # @return [Pathname] The directory that contains the site's templates.
-    attr_reader :template_path
+    attr_reader :template_dir
 
     # @return [Pathname] The directory for user-defined page types.
-    attr_reader :pagetype_path
+    attr_reader :pagetype_dir
+
+    # @return [Pathname] The file that specifies the type for pages in this site.
+    attr_reader :type_map_file
+
+    def editing_enabled?
+      @enable_editing
+    end
 
     # The #call method required by the Rack specification for Rack
     # applications.
@@ -138,56 +165,37 @@ module Silkweave
     end
 
     # Returns an object to model a Web page. The class of this object (also
-    # known as the page type) is determined by reading a file named
-    # "=page-type" found in the directory associated with the requested path.
-    # This file must contain nothing more than the name of a class within the
-    # +Silkweave::PageTypes+ module. The class so named must implement the
-    # interface defined by +Silkweave::AbstractPage+. If the "=page-type" file
-    # cannot be read, the path given as the argument and its ancestors are
-    # searched for a file named ":page-type", which will be used in the same
-    # way. If the parent of +self.root+ is reached without finding a
-    # ":page-type" file, then +Silkweave::PageTypes::PlainPage+ will be used as
-    # the default page type.
+    # known as the page type) is determined by consulting the type mapping
+    # configuration file. If this file doesn't exist, then
+    # +Silkweave::PageTypes::PlainPage+ will be used as the type of every page.
     #
     # @param [#to_str, #to_path] path A path in URL space.
     #
     # @return [AbstractPage] A new instance of one of the classes in the
     #   +Silkweave::PageTypes+ module, initialized with the given +path+.
     #
-    # @raise [InternalServerError] if the page type specified in the
-    #   "=page-type" or ":page-type" file is not the name of a class in
-    #   +Silkweave::PageTypes+.
+    # @raise [InternalServerError] if the page type specified for the page is
+    #   not a valid page type.
     def page_for path
       path = normalize_path path
-      private_type_file = urlpath_to_fspath(path + '=page-type')
-      type_file = if private_type_file.readable?
-        private_type_file 
-      else
-        find_upward(path, ':page-type', StringIO.new('PlainPage'))
-      end
+      page_type = (type_map.find {|pattern,type| pattern.match path} || [nil, 'PlainPage'])[1]
       begin
-        "Silkweave::PageTypes::#{type_file.read.strip}".constantize.new(path, self)
+        "Silkweave::PageTypes::#{page_type}".constantize.new(path, self)
       rescue NameError, NoMethodError, ArgumentError => error
-        type = type_file.read.strip.inspect
-        if type_file.is_a? Pathname
-          type_file = fspath_to_urlpath(type_file)
-        else
-          type_file = 'a hard-coded default'
-        end
-        case error
-        when NameError
-          reason = 'it does not name a member of the Silkweave::PageTypes module'
-        when NoMethodError
-          reason = 'it is not the name of a class'
-        when ArgumentError
-          reason = 'its constructor does not accept parameters correctly'
-        else
-          reason = "it just ain't"
-        end
+        reason = case error
+          when NameError
+            "it does not name a member of the Silkweave::PageTypes module"
+          when NoMethodError
+            "it is not the name of a class"
+          when ArgumentError
+            "its constructor does not accept parameters correctly"
+          else
+            "it just ain't"
+          end
         raise InternalServerError, <<-MSG.split.join(' ')
-          This site's author specified <code>#{type}</code> as the page type
-          for <code>#{path}</code>, but that is not a valid page type because
-          #{reason}. This page type was specified in <code>#{type_file}</code>.
+          This site's author specified <code>#{page_type.inspect}</code> as the
+          page type for <code>#{path}</code>, but that is not a valid page type
+          because #{reason}.
         MSG
       end
     end
@@ -198,8 +206,9 @@ module Silkweave
     # site. This makes +Site+ objects look prettier in irb.
     def inspect
       "#<#{self.class} @root=#{@root.to_s.inspect}, " +
-        "@template_path=#{@template_path.to_s.inspect}, " +
-        "@pagetype_path=#{@pagetype_path.to_s.inspect}>"
+        "@template_dir=#{@template_dir.to_s.inspect}, " +
+        "@pagetype_dir=#{@pagetype_dir.to_s.inspect}, " +
+        "@type_map_file=#{@type_map_file.to_s.inspect}>"
     end
 
     # @private
@@ -208,8 +217,9 @@ module Silkweave
     def eql? other
       return false unless other.is_a? Silkweave::Site
       @root == other.root and
-        @template_path == other.template_path and
-        @pagetype_path == other.pagetype_path 
+        @template_dir == other.template_dir and
+        @pagetype_dir == other.pagetype_dir and
+        @type_map_file == other.type_map_file
     end
     alias :== :eql?
 
@@ -218,10 +228,37 @@ module Silkweave
     # Two sites have the same hash code if they were initialized with the same
     # paths.
     def hash
-      @root.hash ^ @template_path.hash ^ @pagetype_path.hash
+      @root.hash ^ @template_dir.hash ^ @pagetype_dir.hash ^ @type_map_file.hash
     end
 
     private
+
+    # Loads the page type mapping from the type map file.
+    #
+    # @return [Array<Array(Regexp,String)>] 
+    def type_map
+      return [] unless @type_map_file.exist?
+      if not @type_map or @type_map_updated_at < @type_map_file.mtime
+        @type_map = @type_map_file.open {|f| check_type_map YAML::load f}.
+          map {|pattern,type| [Regexp.new(pattern), type]}
+        @type_map_updated_at = Time.now
+      end
+      @type_map
+    end
+
+    # Raises hell if the type map file isn't formatted correctly.
+    #
+    # @param [Object] An object to check for validity as a type map.
+    #
+    # @return [Object] The same object that was passed in.
+    #
+    # @raise [RuntimeError] if the type map is somehow invalid.
+    def check_type_map obj
+      unless obj.is_a? Array and obj.all? {|i| i.is_a? Array and i.length == 2 and i.all? {|j| j.is_a? String}}
+        raise 'the type map must be a sequence of pairs of strings' 
+      end
+      obj
+    end
 
     # Checks the given directory for a readable file with the given name. If
     # such a file isn't found, the directory's ancestors (up to and including

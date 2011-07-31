@@ -32,12 +32,12 @@ module Silkweave
     # (using +Silkweave::Site#page_for+), then finds the template and layout
     # associated with the page's type (using +Silkweave::Arachne#template_for+),
     # and renders the template (within the associated layout, if any). The
-    # page's template is sought within +self.site.template_path+ and the page's
-    # layout is sought within +self.site.template_path.join(":layouts")+. The
+    # page's template is sought within +self.site.template_dir+ and the page's
+    # layout is sought within +self.site.template_dir.join(":layouts")+. The
     # page object and site object are accessible in the template by way of the
     # respective variables named +@page+ and +@site+.
-    def sew
-      append_view_path site.template_path
+    def weave
+      append_view_path site.template_dir
       @page = site.page_for(Rack::Utils.unescape(request.path_info))
       content_type = @page.content_type
       if template = template_for(@page)
@@ -82,7 +82,7 @@ module Silkweave
 
     # Finds and returns the template associated with the given class or the
     # given object's class. It looks for templates in the directory named by
-    # +site.template_path+. It first looks for a template named after the class
+    # +site.template_dir+. It first looks for a template named after the class
     # name with "Silkweave::PageTypes::" stripped from the start and inflected
     # with +ActiveSupport::Inflector#underscore+. If there is no template with
     # that name, then it climbs up the superclass chain until it finds a
