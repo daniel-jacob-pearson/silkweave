@@ -2,9 +2,11 @@
 
 module Silkweave
   module PageTypes
+    # Causes a page type to be sorted by time of publication.
+    #
     # Certain page types, like those in a blog, are usually sorted by the
-    # time at which they were published (newest first), if possible. This
-    # module enables that behavior when mixed into a page type.
+    # time at which they were published (newest first). This module enables
+    # that behavior when mixed into a page type.
     #
     # Note that the implementation of the +#pubtime+ method included in this
     # module relies on the +#fspath+ and +#mtime+ methods, so unless the

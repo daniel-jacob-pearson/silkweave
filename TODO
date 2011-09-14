@@ -21,3 +21,4 @@
 - (Maybe) Support updating page attributes via POST request.
 - Implement some sort of page caching.
 - (Maybe) Integrate a Web-based file manager and editor (such as http://elrte.org/) to make a sort of CMS.
+- (Maybe) Provide the option for file attributes of a page to be inherited from the parent page.
