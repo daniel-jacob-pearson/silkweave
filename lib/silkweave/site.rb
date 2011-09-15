@@ -71,16 +71,16 @@ module Silkweave
       @pagetype_dir = normalize_path options[:pagetype_dir]
       @type_map_file = normalize_path options[:type_map_file]
       @type_map = nil
-      @type_map_updated_at = -1.0/0.0 # -Infinity
-      Arachne.middleware.clear
+      @type_map_updated_at = -1.0/0.0 # negative infinity
+      Arachne.middleware.middlewares.clear
       Arachne.use Middleware::Head
       Arachne.use Middleware::AddSlash, @root.to_s
-      Arachne.use Middleware::Length
+      Arachne.use Rack::ContentLength
       Arachne.use ActionDispatch::Static, @root.to_s
       @page_renderer = Arachne.middleware.build(:weave) do |env|
         Arachne.new(self).dispatch(:weave, ActionDispatch::Request.new(env))
       end
-      Arachne.middleware.clear
+      Arachne.middleware.middlewares.clear
       # Load all user-supplied page type classes.
       Dir[@pagetype_dir + '*.rb'].each do |page_type|
         require page_type

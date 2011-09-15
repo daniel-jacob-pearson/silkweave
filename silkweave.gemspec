@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'silkweave'
-  s.version = '0.0.2'
+  s.version = '0.9.0'
   s.homepage = 'http://nanoo.org/silkweave'
   s.author = 'Daniel Pearson'
   s.email = 'daniel@nanoo.org'
@@ -16,7 +16,8 @@ Gem::Specification.new do |s|
     'want to factor out elements that are common to multiple Web pages.'
   s.files = Dir['lib/**/*.rb'] + Dir['README*'] + Dir['bin/*']
   s.executables = ['silkweave-static']
-  s.add_dependency('actionpack', '>= 3.0.0')
+  s.add_dependency('actionpack', '>= 3.1.0')
+  s.add_dependency('rack', '>= 1.3.2')
   s.add_dependency('haml', '>= 3.0.0')
   s.add_dependency('facets', '>= 2.9.0')
   s.has_rdoc = true
