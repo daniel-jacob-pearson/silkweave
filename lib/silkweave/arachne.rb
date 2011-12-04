@@ -47,12 +47,23 @@ module Silkweave
           "This site's author did not provide a template for " \
           "<code>#{@page.class}</code>, nor is there a default template."
       end
-    rescue ActionView::Template::Error => e
-      raise InternalServerError,
-        "In <code>#{Rack::Utils.escape_html(site.fspath_to_urlpath e.file_name)}" \
-        "</code>, line #{e.line_number}: #{Rack::Utils.escape_html(e.message)}"
-    rescue StandardError => error
-      raise InternalServerError, Rack::Utils.escape_html(error.message)
+    rescue Exception => e
+      case e
+      when HTTPError
+        raise e
+      when ActionView::Template::Error
+        raise InternalServerError,
+          "In <code>#{Rack::Utils.escape_html(site.fspath_to_urlpath e.file_name)}" \
+          "</code>, line #{e.line_number}: #{Rack::Utils.escape_html(e.message)}"
+      when Errno::ENOENT
+        raise NotFound, Rack::Utils.escape_html(e.message)
+      when Errno::EACCES
+        raise Forbidden, Rack::Utils.escape_html(e.message)
+      when StandardError
+        raise InternalServerError, Rack::Utils.escape_html(e.message)
+      else
+        raise e
+      end
     end
 
     # Whenever an +HTTPError+ is raised while generating a page with Silkweave,
@@ -75,7 +86,9 @@ module Silkweave
         render :status => type, :inline => "<!DOCTYPE html>" \
           "<html><head><meta charset='utf-8' />" \
           "<title>#{type.to_s.titleize}</title></head>" \
-          "<body><h1>#{type.to_s.titleize}</h1>#{@error.message}</body></html>"
+          "<body><h1>#{type.to_s.titleize}</h1><p>#{@error.message}</p>" \
+          "<pre>#{Rack::Utils.escape_html(@error.backtrace.join("\n"))}</pre>" \
+          "</body></html>"
       end
     end
     rescue_from HTTPError, :with => :http_error_handler
