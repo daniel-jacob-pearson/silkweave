@@ -59,7 +59,7 @@ module Silkweave
     # creating a +Site+ instance has the side effect of clearing the
     # +middleware+ attribute of the +Arachne+ class.
     def initialize(root, options={})
-      @root = normalize_path root
+      @root = normalize_dir root
       defaults = {
         :template_dir => Pathname.new('../templates').expand_path(@root),
         :pagetype_dir => Pathname.new('../page-types').expand_path(@root),
@@ -67,8 +67,8 @@ module Silkweave
         :enable_editing => false
       }
       options = defaults.merge(options)
-      @template_dir = normalize_path options[:template_dir]
-      @pagetype_dir = normalize_path options[:pagetype_dir]
+      @template_dir = normalize_dir options[:template_dir]
+      @pagetype_dir = normalize_dir options[:pagetype_dir]
       @type_map_file = normalize_path options[:type_map_file]
       @type_map = nil
       @type_map_updated_at = -1.0/0.0 # negative infinity
@@ -177,7 +177,7 @@ module Silkweave
     # @raise [InternalServerError] if the page type specified for the page is
     #   not a valid page type.
     def page_for path
-      path = normalize_path path
+      path = normalize_dir path
       page_type = (type_map.find {|pattern,type| pattern.match path} || [nil, 'PlainPage'])[1]
       begin
         "Silkweave::PageTypes::#{page_type}".constantize.new(path, self)
@@ -292,7 +292,20 @@ module Silkweave
     def normalize_path path
       path = Pathname.new path unless path.is_a? Pathname
       path = SLASH + path if path.relative?
-      path
+      return path
+    end
+
+    # Ensures that the argument is a +Pathname+ object and is an absolute path
+    # and ends with a slash ("/").
+    #
+    # @param [#to_str, #to_path] path The path to normalize.
+    #
+    # @return [Pathname] The normalized path.
+    def normalize_dir path
+      path = normalize_path path
+      s = path.to_s
+      path = Pathname.new(s + '/') if s[-1..-1] != '/'
+      return path
     end
 
     # :nodoc:
