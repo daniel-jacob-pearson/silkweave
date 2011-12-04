@@ -114,7 +114,7 @@ module Silkweave
       end
 
       # @return [Time] The time at which one of the page's file attributes was
-      #   last modified.
+      #   most recently modified.
       def mtime
         file_attributes.map { |a| fspath + "@#{a}" }.select(&:exist?).
           map(&:mtime).max || fspath.mtime
