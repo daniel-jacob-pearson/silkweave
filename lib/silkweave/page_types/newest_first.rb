@@ -30,15 +30,15 @@ module Silkweave
         end
       end
 
-      # Comparison for sorting purposes. Compares to the other object's
-      # +pubtime+ attribute, if it has one, otherwise compares to the other
-      # object's +mtime+ attribute, if it has one, otherwise inherited
-      # comparison rules apply.
+      # Comparison for sorting purposes, such that newer pages are lesser than
+      # older pages. Compares to the other object's +pubtime+ attribute, if it
+      # has one, otherwise compares to the other object's +mtime+ attribute, if
+      # it has one, otherwise inherited comparison rules apply.
       #
       # @param [AbstractPage, Object] other The object to compare to this page.
       #
-      # @return [Fixnum] -1 if +other+ is less than the receiver, 0 if they are
-      #   equal, and 1 if +other+ is greater.
+      # @return [Fixnum] -1 if +other+ is newer than the receiver, 0 if they are
+      #   of equal age, and 1 if +other+ is older.
       def <=> other
         if other.respond_to? :pubtime
           -(self.pubtime <=> other.pubtime)
