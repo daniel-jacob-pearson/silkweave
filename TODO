@@ -3,7 +3,7 @@
     .posts
   * Blog::RSSIndex < Blog::Index (/diary/rss-feed/)
   * Blog::AtomIndex < Blog::Index (/diary/atom-feed/)
-  * Blog::Archive (/diary/2010/, /diary/2010/09/, /diary/2010/09/15/)
+  * Blog::Folder (/diary/2010/, /diary/2010/09/, /diary/2010/09/15/)
   * Blog::Post (/diary/2010/09/15/picnic-in-the-woods/)
     .date
     @title
