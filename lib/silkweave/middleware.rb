@@ -8,6 +8,5 @@ module Silkweave
 
     autoload :AddSlash
     autoload :Head
-    autoload :Length
   end
 end
