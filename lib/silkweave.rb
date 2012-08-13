@@ -37,6 +37,7 @@ module Silkweave
   autoload :PageTypes
   autoload :Middleware
   autoload :Site
+  autoload :Version
 
   # The common ancestor for all exceptions that trigger HTTP error responses.
   # You shouldn't raise this directly. All subclasses of this should be named
