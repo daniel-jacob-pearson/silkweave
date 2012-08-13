@@ -61,9 +61,9 @@ module Silkweave
     def initialize(root, options={})
       @root = normalize_dir root
       defaults = {
-        :template_dir => Pathname.new('../templates').expand_path(@root),
-        :pagetype_dir => Pathname.new('../page-types').expand_path(@root),
-        :type_map_file => Pathname.new('../type-map.yaml').expand_path(@root),
+        :template_dir => @root + '../templates',
+        :pagetype_dir => @root + '../page-types',
+        :type_map_file => @root + '../type-map.yaml',
         :enable_editing => false
       }
       options = defaults.merge(options)
@@ -291,8 +291,7 @@ module Silkweave
     # @return [Pathname] The normalized path.
     def normalize_path path
       path = Pathname.new path unless path.is_a? Pathname
-      path = SLASH + path if path.relative?
-      return path
+      return path.expand_path('/')
     end
 
     # Ensures that the argument is a +Pathname+ object and is an absolute path
