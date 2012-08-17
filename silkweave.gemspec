@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
     'the help of templates. It is for people who find using a CMS annoying '   \
     'and would rather just edit files and arrange them in folders, but still ' \
     'want to factor out elements that are common to multiple Web pages.'
-  s.files = Dir['lib/**/*.rb'] + ['README.md', 'QuickStart.md', 'UNLICENSE', 'bin/silkweave']
+  s.files = Dir['lib/**/*.rb'] + ['README.md', 'QuickStart.md', 'COPYING.txt', 'bin/silkweave']
   s.executables = ['silkweave']
   s.add_dependency('actionpack', '>= 3.1.0')
   s.add_dependency('rack', '>= 1.3.2')
