@@ -19,11 +19,20 @@ require 'fileutils'
 require 'facets/hash/slice'
 require 'facets/hash/rekey'
 
+class Module
+  def list_classes
+    constants.map { |c| const_get(c) }.
+      select { |c| c.is_a? Module }.
+      map { |c| c.is_a?(Class) ? c : c.list_classes }
+  end
+end
+
 module Silkweave::CLI
   def self.run!
     commands = {}
 
     # Defaults for options.
+    root_option_has_default_value = true
     options = {
       :site_root => Pathname.pwd,
       :template_dir => nil,
@@ -38,14 +47,13 @@ module Silkweave::CLI
       config_file = config_dir + 'silkweave-cli.conf'
       if config_file.readable?
         options.update(
-          config_file.open do |f|
-            YAML::load(f).instance_eval do
-              if self.is_a? Hash
-                self
-              else
-                $stderr.puts "Warning: configuration data in #{config_file.to_s} is invalid, so it is being ignored."
-                {}
-              end
+          YAML.load_file(config_file).instance_eval do
+            if self.is_a? Hash
+              self
+            else
+              $stderr.puts "Warning: configuration data in #{config_file} " \
+                "is invalid, so it is being ignored."
+              {}
             end
           end.symbolize_keys.rekey(
             :root => :site_root,
@@ -54,6 +62,7 @@ module Silkweave::CLI
             :'type-map' => :type_map_file,
             :output => :output_filename
           ).tap do |opts|
+            root_option_has_default_value = false if opts[:site_root]
             opts[:site_root] &&= config_dir + opts[:site_root]
             opts[:template_dir] &&= config_dir + opts[:template_dir]
             opts[:pagetype_dir] &&= config_dir + opts[:pagetype_dir]
@@ -76,6 +85,7 @@ module Silkweave::CLI
               "Use DIRECTORY as the site's root.",
               '(default: the current directory)') do |dir|
         options[:site_root] = Pathname.pwd + dir
+        root_option_has_default_value = false
       end
       opts.on('-t', '--templates DIRECTORY',
               "Look in DIRECTORY for the site's templates.",
@@ -116,66 +126,92 @@ module Silkweave::CLI
     commands['init'] = {
       :description => 'Create a skeleton file tree for a new site.',
       :proc => lambda do |*args|
-        puts 'No arguments given, so no sites were set up.' if args.empty?
-        args.map { |x| Pathname.pwd + x + 'pages' }.each do |root|
-          site = Silkweave::Site.new root,
-            options.slice(:template_dir, :pagetype_dir, :type_map_file).reject {|k,v| v.nil?}
-          [site.root, site.template_dir, site.pagetype_dir].each do |dir|
-            unless dir.exist?
-              puts "Creating directory #{dir} ..."
-              FileUtils.mkdir_p dir
-            end
+        if args.first
+          options[:site_root] = Pathname.pwd + args.first + 'pages'
+        else
+          if root_option_has_default_value
+            puts '"silkweave init" cannot operate without an argument unless a site root is',
+              'specified with a command line option or a configuration file.'
+            exit 1
           end
-          if options[:overwrite] or not site.type_map_file.exist?
-            puts "Creating type map at #{site.type_map_file} ..."
-            site.type_map_file.open('w') do |f|
-              f.puts "# This file contains instructions for mapping page paths to page types.",
-                "# This file must use the YAML format to specify a list of pairs of strings.",
-                "# The first string in each pair must be a regular expression, while the second",
-                "# must name a page type. The page type associated with a regular expression",
-                "# will be used for a page if that regular expression is the first that matches",
-                "# the page's URL path.",
-                '---', '- - ^/$', '  - FrontPage', '- - .*', '  - PlainPage'
-            end
-          end
-          if options[:overwrite] or not (site.template_dir + 'plain_page.haml').exist?
-            puts "Creating template at #{site.template_dir + 'plain_page.haml'} ..."
-            (site.template_dir + 'plain_page.haml').open('w') do |f|
-              f.puts '!!! 5',
-                '%html',
-                '  %head',
-                '    %meta(charset="utf-8")',
-                '    %title= @page.title',
-                '  %body',
-                '    = @page.content'
-            end
-          end
-          if options[:overwrite] or not (site.root + '@title').exist?
-            puts "Setting front page title in #{site.root + '@title'} ..."
-            (site.root + '@title').open('w') do |f|
-              f.puts 'A New Web Site'
-            end
-          end
-          if options[:overwrite] or not (site.root + '@content').exist?
-            puts "Setting front page content in #{site.root + '@content'} ..."
-            (site.root + '@content').open('w') do |f|
-              f.puts '<p>This is the initial content for a web site that was created ',
-                'with <a href="http://nanoo.org/software/silkweave/">Silkweave</a>.</p>'
-            end
-          end
-          config_ru = Pathname.new('../config.ru').expand_path(site.root)
-          if options[:overwrite] or not config_ru.exist?
-            puts "Creating Rack startup script at #{config_ru} ..."
-            config_ru.open('w') do |f|
-              f.puts "require 'rubygems'", "require 'silkweave'",
-                "run Silkweave::Site.new #{site.root.to_s.inspect},",
-                "    :template_dir => #{site.template_dir.to_s.inspect},",
-                "    :pagetype_dir => #{site.pagetype_dir.to_s.inspect},",
-                "    :type_map_file => #{site.type_map_file.to_s.inspect}"
-            end
-          end
-          puts "Finished setting up the site rooted at #{site.root}."
         end
+        site = Silkweave::Site.new options[:site_root],
+          options.slice(:template_dir, :pagetype_dir, :type_map_file).reject {|k,v| v.nil?}
+        [site.root, site.template_dir, site.template_dir + ':layouts', site.pagetype_dir].each do |dir|
+          unless dir.exist?
+            puts "Creating directory #{dir} ..."
+            FileUtils.mkdir_p dir
+          end
+        end
+        if options[:overwrite] or not site.type_map_file.exist?
+          puts "Creating type map at #{site.type_map_file} ..."
+          site.type_map_file.open('w') do |f|
+            f.puts "# This file contains instructions for mapping page paths to page types.",
+              "# This file must use the YAML format to specify a list of pairs of strings.",
+              "# The first string in each pair must be a regular expression, while the second",
+              "# must name a page type. The page type associated with a regular expression",
+              "# will be used for a page if that regular expression is the first that matches",
+              "# the page's URL path.",
+              '---', '- - ^/$', '  - FrontPage', '- - .*', '  - PlainPage'
+          end
+        end
+        if options[:overwrite] or not (site.template_dir + 'plain_page.haml').exist?
+          puts "Creating template at #{site.template_dir + 'plain_page.haml'} ..."
+          (site.template_dir + 'plain_page.haml').open('w') do |f|
+            f.puts '!!! 5',
+              '%html',
+              '  %head',
+              '    %meta(charset="utf-8")',
+              '    %title= @page.title',
+              '  %body',
+              '    = @page.content'
+          end
+        end
+        if options[:overwrite] or not (site.root + '@title').exist?
+          puts "Setting front page title in #{site.root + '@title'} ..."
+          (site.root + '@title').open('w') do |f|
+            f.puts 'A New Web Site'
+          end
+        end
+        if options[:overwrite] or not (site.root + '@content').exist?
+          puts "Setting front page content in #{site.root + '@content'} ..."
+          (site.root + '@content').open('w') do |f|
+            f.puts '<p>This is the initial content for a web site that was created ',
+              'with <a href="http://nanoo.org/software/silkweave/">Silkweave</a>.</p>'
+          end
+        end
+        config_ru = Pathname.new('../config.ru').expand_path(site.root)
+        if options[:overwrite] or not config_ru.exist?
+          puts "Creating Rack startup script at #{config_ru} ..."
+          config_ru.open('w') do |f|
+            f.puts "require 'rubygems'", "require 'silkweave'",
+              "run Silkweave::Site.new #{site.root.to_s.inspect},",
+              "    :template_dir => #{site.template_dir.to_s.inspect},",
+              "    :pagetype_dir => #{site.pagetype_dir.to_s.inspect},",
+              "    :type_map_file => #{site.type_map_file.to_s.inspect}"
+          end
+        end
+        cli_conf = Pathname.new('../silkweave-cli.conf').expand_path(site.root)
+        if options[:overwrite] or not cli_conf.exist?
+          puts "Creating configuration file for \"silkweave\" command at #{cli_conf} ..."
+          cli_conf.open('w') do |f|
+            YAML.dump(options.reject {|k,v| v.nil?}.
+                      rekey { |k| k.to_s }.
+                      rekey('site_root' => 'root',
+                        'template_dir' => 'templates',
+                        'pagetype_dir' => 'page-types',
+                        'type_map_file' => 'type-map',
+                        'output_filename' => 'output').
+                      tap do |opts|
+                        opts['root'] &&= opts['root'].to_s
+                        opts['templates'] &&= opts['templates'].to_s
+                        opts['page-types'] &&= opts['page-types'].to_s
+                        opts['type-map'] &&= opts['type-map'].to_s
+                        opts['output'] &&= opts['output'].to_s
+                      end, f)
+          end
+        end
+        puts "Finished setting up the site rooted at #{site.root}."
       end
     }
     commands['make-static'] = {
@@ -231,9 +267,12 @@ module Silkweave::CLI
         site = Silkweave::Site.new options[:site_root],
           options.slice(:template_dir, :pagetype_dir, :type_map_file).reject {|k,v| v.nil?}
         args.map { |p| Pathname.new p }.
-          map { |p| p.absolute? ? p : (Pathname.pwd + p).relative_path_from(site.root) }. # relative paths should be relative to the site root
-          reject { |p| p.to_s.match /(^\.\.$)|(^\.\.\/)/ }. # filter out paths that aren't within the site root
-          map { |p| Pathname.new('/') + p }. # change to absolute URL paths
+          # relative paths should be relative to the site root
+          map { |p| p.absolute? ? p : (Pathname.pwd + p).relative_path_from(site.root) }.
+          # filter out paths that aren't within the site root
+          reject { |p| p.to_s.match /(^\.\.$)|(^\.\.\/)/ }.
+          # change to absolute URL paths
+          map { |p| Pathname.new('/') + p }.
           each { |p| puts "#{p} is a #{site.page_for(p).class}" }
       end
     }
@@ -242,13 +281,19 @@ module Silkweave::CLI
       :proc => lambda do |*args|
         Silkweave::Site.new options[:site_root],
           options.slice(:template_dir, :pagetype_dir, :type_map_file).reject {|k,v| v.nil?}
-        puts Silkweave::PageTypes.list_classes
+        puts Silkweave::PageTypes.list_classes.to_a.flatten.
+          map { |c| c.name.sub(/^Silkweave::PageTypes::/, '') }.sort
       end
     }
     commands['describe-type'] = {
       :description => 'Shows detailed information about the given page type.',
       :proc => lambda do |*args|
         puts 'describe-type not implemented yet'
+        # Prose description of intended use.
+        # Available file attributes (if any).
+        # Other available methods.
+        # ...basically, just what ri does... :-/
+        # maybe we don't need this command.
       end
     }
     commands['help'] = {
@@ -264,7 +309,7 @@ module Silkweave::CLI
             puts "        #{cmd[:description]}"
           end
         else
-          puts 'help for a particular command'
+          puts 'help for particular commands not implemented yet'
         end
       end
     }
@@ -274,12 +319,9 @@ module Silkweave::CLI
   end
 end
 
-class Module
-  def list_classes
-    constants.map { |c| const_get(c) }.
-      select { |c| c.is_a? Module }.
-      map { |c| c.is_a?(Class) ? c : c.list_classes }
-  end
+begin
+  Silkweave::CLI.run!
+rescue
+  $stderr.puts "Error: #{$!}"
+  exit 1
 end
-
-Silkweave::CLI.run! rescue $stderr.puts "Error: #{$!}"
