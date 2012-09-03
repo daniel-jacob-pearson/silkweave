@@ -161,10 +161,10 @@ module Silkweave
       class Comment < PlainPage
         include NewestFirst
 
-        # Each comment has +sender_name+ and +sender_email+ file attributes to
-        # store the name and email address of the person who submitted the
-        # comment.
-        file_attributes :sender_name, :sender_email
+        # Each comment has +sender_name+, +sender_email+, and +sender_link+
+        # file attributes to store the name, email address, and homepage URL of
+        # the person who submitted the comment.
+        file_attributes :sender_name, :sender_email, :sender_link
       end
 
       # A base class for page types that implement web feeds for a blog.
