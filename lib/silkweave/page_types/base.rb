@@ -76,15 +76,28 @@ module Silkweave
       # @param [Object] default The value the attribute should have if its file
       #   can't be read.
       #
+      # @yield [value] A block may be given to process the content of the file
+      #   before returning it. 
+      #
+      # @yieldparam [String] value The attribute's value, as read from its file.
+      #
+      # @yieldreturn [Object] The attribute's value, after any user-defined
+      #   processing.
+      #
       # @example A class for pages that have a beverage associated with them.
       #   module Silkweave::PageTypes
       #     class Example < Base
       #       file_attribute :beverage, "You must be thirsty without a drink."
       #     end
       #   end
-      def self.file_attribute name, default=nil
+      def self.file_attribute name, default=nil, &block
         define_method name do ||
-          (fspath + "@#{name}").read.chomp.html_safe rescue default
+          begin
+            value = (fspath + "@#{name}").read.chomp.html_safe
+            block ? block.call(value) : value
+          rescue
+            default
+          end
         end
         @file_attribute_names ||= Set.new
         @file_attribute_names.add name.to_s
