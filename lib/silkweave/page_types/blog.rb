@@ -24,9 +24,10 @@ module Silkweave
         include Categorized
         include NewestFirst
 
-        # It can be useful to summarize the main content of a blog post so that
-        # only the summary is shown for the post when it appears in a listing
-        # of many posts.
+        # @!attribute [r] summary
+        #   It can be useful to summarize the main content of a blog post so
+        #   that only the summary is shown for the post when it appears in a
+        #   listing of many posts.
         file_attribute :summary
 
         # Returns an enumerator over the comments attached to this blog post.
@@ -161,20 +162,33 @@ module Silkweave
       class Comment < PlainPage
         include NewestFirst
 
-        # Each comment has +sender_name+, +sender_email+, and +sender_link+
-        # file attributes to store the name, email address, and homepage URL of
-        # the person who submitted the comment.
-        file_attributes :sender_name, :sender_email, :sender_link
+        # @!attribute [r] sender_name
+        #   The name of the person who submitted the comment.
+        #   @return [String]
+        file_attribute :sender_name
+
+        # @!attribute [r] sender_email
+        #   The email address of the person who submitted the comment.
+        #   @return [String]
+        file_attribute :sender_email
+
+        # @!attribute [r] sender_link
+        #   The URL of the home page of the person who submitted the comment.
+        #   @return [String]
+        file_attribute :sender_link
       end
 
       # A base class for page types that implement web feeds for a blog.
       class AbstractFeed < Base
-        # The content of the +source+ file attribute specifies the 
-        # +Blog::Folder+ or the +Blog::Post+ that contains the items for this
-        # feed. The value of this attribute must be a URL path that specifies a
-        # page that has either the +posts+ method (like a +Folder+) or the
-        # +comments+ method (like a +Post+). This URL path can be relative, in
-        # which case it is relative to the URL path of this page.
+        # @!attribute [r] source
+        #   The URL path of the +Blog::Folder+ or the +Blog::Post+ that
+        #   contains the items for this feed. The page specified by this URL
+        #   path must have either a +posts+ method (like a +Folder+) or a
+        #   +comments+ method (like a +Post+). This URL path can be relative,
+        #   in which case it is relative to the URL path of this (the feed's)
+        #   page.
+        #
+        #   @return [String]
         file_attribute :source, '..'
 
         # Returns an enumerator over either the posts or comments contained in
@@ -217,7 +231,7 @@ module Silkweave
       # This page type lets you implement an Atom feed for a blog.
       #
       # It is the responsibility of the author of the template for this page
-      # type to generate code that conforms to the RSS format. This class just
+      # type to generate code that conforms to the Atom format. This class just
       # gives the template author an API to access the data for the feed.
       class AtomFeed < AbstractFeed
         # Returns the Content-type HTTP header appropriate for Atom.
