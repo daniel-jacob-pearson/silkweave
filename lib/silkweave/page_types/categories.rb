@@ -48,15 +48,15 @@ module Silkweave
       # Adds a page to this +Category+.
       #
       # @param [String] path The URL path of the page to be added.
-      def add_member p
-        rewrite_members member_paths.add(p)
+      def add_member path
+        rewrite_members member_paths.add(path)
       end
 
       # Removes a page from this +Category+.
       #
       # @param [String] path The URL path of the page to be removed.
-      def delete_member p
-        rewrite_members member_paths.delete(p)
+      def delete_member path
+        rewrite_members member_paths.delete(path)
       end
 
       # Rewrites the file that stores the list of members for this +Category+.

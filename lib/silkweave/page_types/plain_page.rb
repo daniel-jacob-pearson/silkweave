@@ -15,19 +15,25 @@ require 'silkweave/page_types/base'
 
 module Silkweave
   module PageTypes
-    # A plain page has a +@title+ and a chunk of +@content+. The title is a
-    # short description of the page that is usually put into an HTML <title>
-    # tag. The content represents the bulk of the page and can usually contain
-    # whatever HTML you can put in a <body> tag, though the HTML surrounding
-    # the content in the template used may impose other requirements.
+    # +PlainPage+ is the default page type for any page in a Silkweave site
+    # that doesn't inherit or explicitly set a page type. A plain page has a
+    # +@title+ and a chunk of +@content+.
     #
-    # This is a practical example of how simple it can be to create a new page
-    # type by subclassing +Silkweave::PageTypes::Base+.
-    #
-    # +PlainPage+ is also the default page type for any page in a Silkweave site
-    # that doesn't inherit or explicitly set a page type.
+    # The source code of this page type is a working example of how simple it
+    # can be to create a new page type by subclassing
+    # +Silkweave::PageTypes::Base+.
     class PlainPage < Base
-      file_attributes :title, :content
+      # @!attribute [r] title
+      #   The title is a short description of the page that is usually put into
+      #   an HTML <title> tag.
+      file_attribute :title
+
+      # @!attribute [r] content
+      #   The content represents the bulk of the page and can usually contain
+      #   whatever HTML you can put in a <body> tag, though the HTML
+      #   surrounding the content in the template used may impose other
+      #   requirements.
+      file_attribute :content
     end
   end
 end

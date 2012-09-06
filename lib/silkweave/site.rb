@@ -259,7 +259,7 @@ module Silkweave
 
     # Raises hell if the type map file isn't formatted correctly.
     #
-    # @param [Object] An object to check for validity as a type map.
+    # @param [Object] obj An object to check for validity as a type map.
     #
     # @return [Object] The same object that was passed in.
     #
