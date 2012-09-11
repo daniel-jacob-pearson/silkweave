@@ -9,6 +9,25 @@ way of a clear and simple mapping. While this might sound like what any common
 Web server will do with a file tree, the use of templates means that you Don't
 Repeat Yourself (DRY).
 
+What's It Like To Use Silkweave?
+================================
+
+1. Creating an initial skeleton for the site:  
+   `silkweave init ~/example.com`
+2. Editing the front page:  
+   `cd ~/example.com/pages`  
+   `vim @title @content`
+3. Making a new page:  
+   `mkdir ~/example.com/pages/something`  
+   `cd ~/example.com/pages/something`  
+   `vim @title @content`
+4. Editing the relevant template:  
+   `vim ~/example.com/templates/plain_page.haml`
+5. Serving the site dynamically:  
+   `rackup ~/example.com/config.ru`
+6. Generating the site as a set of static files:  
+   `silkweave make-static -r ~/example.com/pages`
+
 Why Use Silkweave?
 ==================
 
@@ -33,11 +52,11 @@ page types. When one page has a different type than another page, it can be
 rendered with a different template, its data might be organized differently, and
 it can exhibit different behavior by responding to different methods within
 template code. With the right customizations, you can even produce pages in
-formats other than HTML. [concrete examples: front page vs. plain page,
-directory index]. Silkweave comes with a variety of general-purpose page types
-out of the box, and you can easily add more types of your own design to suit
-your own site's special needs. Page types can inherit from each other, allowing
-you to reuse the template or other functionality from another page type.
+formats other than HTML. Silkweave comes with a variety of general-purpose page
+types out of the box, and you can easily add more types of your own design to
+suit your own site's special needs. Page types can inherit from each other,
+allowing you to reuse the template or other functionality from another page
+type.
 
 Who Should Use Silkweave?
 =========================
@@ -50,6 +69,19 @@ moderate knowledge of HTML and enough knowledge of Ruby programming to call
 methods on objects. To exploit the full range of Silkweave's customization
 capabilities, you'll need to know the basics of writing classes in the Ruby
 programming language.
+
+How Do I Get Silkweave?
+=======================
+
+You can download the most recent snapshot from
+[GitHub](https://github.com/daniel-jacob-pearson/silkweave), either by cloning
+the source repository or by downloading an archive file. After you have the
+source, you can use the included gemspec file to build and subsequently install
+Silkweave with [RubyGems](http://rubygems.org/). (Hint: `gem build
+silkweave.gemspec && sudo gem install -l silkweave*.gem`) After I'm
+sufficiently satisfied with the state of Silkweave to submit it to the scrutiny
+of a sizable society, I'll make the installation as simple as "gem install
+silkweave".
 
 Status
 ======
